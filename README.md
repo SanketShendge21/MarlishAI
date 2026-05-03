@@ -1,41 +1,94 @@
-<<<<<<< HEAD
-# Marlish.ai
-Marlish.AI is a blazing-fast, offline-first translation engine for Indian colloquial languages. Powered by a custom 8-layer NLP pipeline, it translates chat-style Hinglish and Marlish into formal English, Hindi, and Marathi in real-time with context-aware grammar reordering.
-=======
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🌐 Marlish.AI
 
-## Getting Started
+**Marlish.AI** is a blazing-fast, offline-first translation engine designed specifically for Indian colloquial languages. It bridges the gap between how we speak (Hinglish and Marlish) and formal communication.
 
-First, run the development server:
+Powered by a custom 8-layer NLP pipeline, it translates chat-style inputs into standard English, Hindi, and Marathi in real-time—all while remaining entirely private and functional without an internet connection.
 
+---
+
+## ✨ Key Features
+
+- **🚀 Real-Time Translation:** Instant results as you type with adaptive debouncing.
+- **offline-first:** No cloud APIs. No latency. No data tracking. Everything happens on your device.
+- **🧩 8-Layer NLP Engine:** Goes beyond word-by-word mapping to understand context, intent, and grammar.
+- **🔄 Bidirectional Support:** Handles complex pairs like Hinglish → English, Marlish → Marathi, and more.
+- **📱 PWA Ready:** Install it on your mobile device for a native-app feel.
+- **🎨 Premium UI:** Modern, responsive design with Dark Mode support and visual confidence scoring.
+
+---
+
+## 🧠 The 8-Layer Translation Pipeline
+
+Traditional translators fail at "Hinglish" because they treat it like a simple code-switch. Marlish.AI uses a sophisticated multi-stage pipeline:
+
+1.  **L1: Normalization** – Standardizes typos (e.g., `kr` ➔ `kar`) and collapses repeated characters.
+2.  **L2: Intent Matching** – Identifies full-sentence idiomatic patterns (e.g., `kya scene hai` ➔ `What's the plan?`).
+3.  **L3: Compound Verb Assembly** – Combines fragments like `ja raha hu` into single semantic units (`am going`).
+4.  **L4: Contextual Disambiguation** – Uses surrounding words to pick meanings (e.g., `kal` as `tomorrow` vs `yesterday`).
+5.  **L5: Grammar Reordering** – Converts Subject-Object-Verb (SOV) structure to Subject-Verb-Object (SVO).
+6.  **L6: Vocative Handling** – Intelligently places commas for slang and names (e.g., `bro kidhar hai` ➔ `Bro, where are you?`).
+7.  **L7: Confidence Scoring** – Real-time feedback on how accurate the engine feels the translation is.
+8.  **L8: Beautification** – Final pass for capitalization, punctuation, and spacing.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework:** [Next.js 16](https://nextjs.org/)
+- **UI Logic:** React 19
+- **Styling:** Tailwind CSS v4
+- **Engine:** Custom JavaScript Rule-Based NLP
+- **State:** Local-First (JSON Dictionary based)
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18.x or higher
+- npm / yarn / pnpm
+
+### Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/SanketShendge21/Marlish.ai.git
+    cd Marlish.ai
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Build the dictionary:**
+    The engine relies on a compiled JSON dictionary. Generate it by running:
+    ```bash
+    npm run build-dict
+    ```
+
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+
+Open [http://localhost:3000](http://localhost:3000) to see the app in action!
+
+---
+
+## 🧪 Testing the Engine
+
+You can run the standalone NLP engine test suite to verify translation accuracy:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+node tests/test-engine.js
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 📄 License
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
->>>>>>> 5a1026f ( initialized MarlishAI project with translation core, language detection functionality.)
+*Built with ❤️ for the Indian Multilingual Community.*

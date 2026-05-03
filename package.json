@@ -1,11 +1,12 @@
 {
-  "name": "marlish-ai-temp",
+  "name": "marlish-ai",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "build-dict": "node scripts/build-dictionary.js"
   },
   "dependencies": {
     "lucide-react": "^1.8.0",
