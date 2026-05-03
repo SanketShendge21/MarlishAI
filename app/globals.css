@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-devanagari: var(--font-noto-sans-devanagari), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --color-primary: #6366f1;
+  --color-primary-hover: #818cf8;
+  --color-surface: rgba(255, 255, 255, 0.7);
+  --color-background: #f8fafc;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-border: #e2e8f0;
+  --color-success: #10b981;
+  --color-error: #f43f5e;
+  --radius-card: 1rem;
+  --radius-button: 9999px;
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  --transition-default: 200ms ease;
+}
+
+[data-theme='dark'] {
+  --color-primary: #6366f1;
+  --color-primary-hover: #818cf8;
+  --color-surface: rgba(24, 24, 27, 0.6);
+  --color-background: #09090b;
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a1a1aa;
+  --color-border: #27272a;
+  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.glass-panel {
+  background-color: var(--color-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+}
