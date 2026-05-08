@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Status:** 25% Complete (Rule-Based Engine) → Evolving to Hybrid NLP + ML  
-**Type:** Real-Time Offline-First Indian Language Intelligence System  
+**Type:** Real-Time Indian Chat Language Engine
 **Last Updated:** May 2026
 
 ---
@@ -810,7 +810,7 @@ The project moves from its current 25% state to the full hybrid architecture in 
 
 ### One-Line Summary
 
-> Built a context-aware multilingual NLP system for Hinglish and Marlish using a hybrid rule-based and transformer architecture, improving semantic translation quality for noisy conversational data across 8 bidirectional translation directions.
+> Built a context-aware multilingual NLP system for Hinglish and Marlish using a hybrid rule-based and transformer architecture, improving semantic interpretation quality for noisy conversational data across 8 bidirectional translation directions.
 
 ### Key Technical Talking Points
 

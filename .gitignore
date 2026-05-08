@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Large Data & Models
+docs/Dictionary_Refs/ml_splits/
+models/
+*.zip
+*.onnx

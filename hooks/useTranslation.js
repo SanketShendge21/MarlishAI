@@ -4,7 +4,7 @@ import { routeTranslation } from '@/lib/tier-router';
 import { loadDictionary } from '@/lib/dictionary-engine';
 
 /**
- * useTranslation — Core translation hook (v5)
+ * useTranslation — Core interpretation hook (v5)
  * 
  * Uses adaptive debounce (300ms–800ms based on input length).
  * Returns confidence label: 'exact_match' | 'smart_guess' | 'typo_fixed' | 'partial'
@@ -37,7 +37,7 @@ export function useTranslation(inputText, source, target) {
       .then(() => setIsDictReady(true))
       .catch(err => {
         console.error('[useTranslation] Dict load failed:', err);
-        setError('Dictionary failed to load.');
+        setError('Language engine failed to load.');
       });
   }, []);
 
@@ -93,7 +93,7 @@ export function useTranslation(inputText, source, target) {
       }
     } catch (err) {
       if (err.name !== 'AbortError' && !controller.signal.aborted) {
-        setError('Translation failed.');
+        setError('Interpretation failed.');
         setTranslation('');
       }
     } finally {

@@ -1,14 +1,14 @@
 # 🌐 Marlish.AI
 
-**Marlish.AI** is a blazing-fast, offline-first translation engine designed specifically for Indian colloquial languages. It bridges the gap between how we speak (Hinglish and Marlish) and formal communication.
+**Marlish.AI** is an AI that understands how Indians actually chat online. It is a blazing-fast, offline-first chat language engine designed specifically to decode messy Hinglish and Marlish into clear, meaningful language.
 
-Powered by a custom 8-layer NLP pipeline, it translates chat-style inputs into standard English, Hindi, and Marathi in real-time—all while remaining entirely private and functional without an internet connection.
+Turn messy Hinglish & Marlish into clear, natural language — instantly. Powered by a custom 8-layer NLP pipeline, it interprets chat-style inputs into standard English, Hindi, and Marathi in real-time—all while remaining entirely private and functional without an internet connection.
 
 ---
 
 ## ✨ Key Features
 
-- **🚀 Real-Time Translation:** Instant results as you type with adaptive debouncing.
+- **🚀 Real-Time Interpretation:** Instant results as you type with adaptive debouncing.
 - **offline-first:** No cloud APIs. No latency. No data tracking. Everything happens on your device.
 - **🧩 8-Layer NLP Engine:** Goes beyond word-by-word mapping to understand context, intent, and grammar.
 - **🔄 Bidirectional Support:** Handles complex pairs like Hinglish → English, Marlish → Marathi, and more.
@@ -19,7 +19,7 @@ Powered by a custom 8-layer NLP pipeline, it translates chat-style inputs into s
 
 ## 🧠 The 8-Layer Translation Pipeline
 
-Traditional translators fail at "Hinglish" because they treat it like a simple code-switch. Marlish.AI uses a sophisticated multi-stage pipeline:
+Traditional translation systems fail at "Hinglish" because they treat it like a simple code-switch. Marlish.AI uses a sophisticated multi-stage pipeline:
 
 1.  **L1: Normalization** – Standardizes typos (e.g., `kr` ➔ `kar`) and collapses repeated characters.
 2.  **L2: Intent Matching** – Identifies full-sentence idiomatic patterns (e.g., `kya scene hai` ➔ `What's the plan?`).
@@ -27,7 +27,7 @@ Traditional translators fail at "Hinglish" because they treat it like a simple c
 4.  **L4: Contextual Disambiguation** – Uses surrounding words to pick meanings (e.g., `kal` as `tomorrow` vs `yesterday`).
 5.  **L5: Grammar Reordering** – Converts Subject-Object-Verb (SOV) structure to Subject-Verb-Object (SVO).
 6.  **L6: Vocative Handling** – Intelligently places commas for slang and names (e.g., `bro kidhar hai` ➔ `Bro, where are you?`).
-7.  **L7: Confidence Scoring** – Real-time feedback on how accurate the engine feels the translation is.
+7.  **L7: Confidence Scoring** – Real-time feedback on how accurate the engine feels the interpretation is.
 8.  **L8: Beautification** – Final pass for capitalization, punctuation, and spacing.
 
 ---
@@ -78,7 +78,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the app in action!
 
 ## 🧪 Testing the Engine
 
-You can run the standalone NLP engine test suite to verify translation accuracy:
+You can run the standalone NLP engine test suite to verify interpretation accuracy:
 ```bash
 node tests/test-engine.js
 ```
