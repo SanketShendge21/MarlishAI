@@ -85,6 +85,16 @@ node tests/test-engine.js
 
 ---
 
+## 📦 Legacy: mT5 Scratch Training (Pre-Pivot)
+
+The `legacy/` folder and the `pre-pivot-mt5-training` git branch preserve the
+original mT5-small fine-tuning attempt. Training on 18.4M pairs yielded BLEU ~3,
+establishing that scratch training on this noisy dataset is not a viable path.
+This diagnostic work directly informed the pivot to the IndicXlit + opus-mt
+architecture documented in `docs/ARCHITECTURE_ANALYSIS_AND_PLAN.md`.
+
+---
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

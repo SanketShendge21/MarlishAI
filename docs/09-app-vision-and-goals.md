@@ -1,12 +1,12 @@
 # Marlish.AI — Vision, Goals & Architecture
 
-> **Version:** 6.0 | **Date:** 2026-05-03 | **Status:** Production-Ready (Offline 7-Layer NLP Dictionary)
+> **Version:** 6.0 | **Date:** 2026-05-03 | **Status:** Production-Ready (Offline 8-Layer NLP Dictionary)
 
 ---
 
 ## 1. What Is Marlish.AI?
 
-**Marlish.AI** is a real-time, offline-first translation web app for conversational Indian languages. It translates the way Indians actually text — in Hinglish (Hindi + English), Marlish (Marathi + English), and other mixed-code variants — using curated JSON dictionaries powered by a custom **7-layer NLP translation engine**.
+**Marlish.AI** is a real-time, offline-first translation web app for conversational Indian languages. It translates the way Indians actually text — in Hinglish (Hindi + English), Marlish (Marathi + English), and other mixed-code variants — using curated JSON dictionaries powered by a custom **8-layer NLP translation engine**.
 
 ### Supported Language Pairs
 
@@ -48,9 +48,9 @@ We migrated from a 10MB CSV to an optimized JSON dictionary built from three sou
 
 ---
 
-## 3. The 7-Layer NLP Translation Engine
+## 3. The 8-Layer NLP Translation Engine
 
-To overcome the robotic "word-for-word" translations of simple dictionaries, we built a highly advanced, stateless 7-layer rule engine (`lib/dictionary-engine.js`).
+To overcome the robotic "word-for-word" translations of simple dictionaries, we built a highly advanced, stateless 8-layer rule engine (`lib/dictionary-engine.js`).
 
 ### Layer 1: Normalization (Typo Handling)
 Cleans up casual chat abbreviations before translation:
@@ -120,7 +120,7 @@ public/
 ├── sw.js                        # Service Worker (Network-First for PWA)
 
 lib/
-├── dictionary-engine.js         # Main 7-Layer orchestrator
+├── dictionary-engine.js         # Main 8-Layer orchestrator
 ├── grammar-rules.js             # Layer 6: SOV -> SVO Regex engine
 ├── phrase-intent-rules.js       # Layer 2 & 3: Idioms and Compound Verbs
 ├── contextual-disambiguation.js # Layer 4: Context windowing

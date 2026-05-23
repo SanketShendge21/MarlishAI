@@ -15,7 +15,7 @@ The current architecture (v6.0) is already incredibly strong for an offline MVP.
 - ⚡ **Sub-50ms Translation Speed:** Achieved via O(1) JSON hash lookups.
 - 📴 **100% Offline-First:** No API latency, no server dependency.
 - 🪶 **Extremely Lightweight:** Only ~1.2MB dictionary payload.
-- 🧠 **7-Layer NLP Engine:** Handles phrase matching, SOV→SVO grammar reordering, and typo normalization natively.
+- 🧠 **8-Layer NLP Engine:** Handles phrase matching, SOV→SVO grammar reordering, and typo normalization natively.
 
 **The Problem Is NOT Speed.**
 The current engine is actually faster than most cloud-based AI translators. The real problem lies in:
@@ -26,14 +26,14 @@ The current engine is actually faster than most cloud-based AI translators. The 
 *Example:*
 - **Input:** `"kal milte hai bro"`
 - **Pure Dictionary:** `"tomorrow meet are brother"`
-- **7-Layer Engine:** `"Bro, let's meet tomorrow."` (Works great for known patterns!)
+- **8-Layer Engine:** `"Bro, let's meet tomorrow."` (Works great for known patterns!)
 - **Complex Unknowns:** For structures completely outside our regex grammar templates, the engine falls back to robotic translations.
 
 ---
 
 ## 2. Why a Pure "AI-Only" Approach is NOT Optimal
 
-It is tempting to throw away the 7-Layer Dictionary Engine and simply train a massive Machine Learning (ML) model from scratch to handle everything. **This is a critical mistake for a web app.**
+It is tempting to throw away the 8-Layer Dictionary Engine and simply train a massive Machine Learning (ML) model from scratch to handle everything. **This is a critical mistake for a web app.**
 
 Here is why replacing our engine with a pure AI model is a bad idea:
 
@@ -48,7 +48,7 @@ Instead of replacing the dictionary, we **augment** it. The ML model should act 
 
 **The Hybrid Flow:**
 1. **Step 1 (Dictionary Layer):** O(1) Lookup for instant phrase/word matching.
-2. **Step 2 (Contextual NLP Rules):** Fix tense, grammar, and typos (Our current 7-Layer engine).
+2. **Step 2 (Contextual NLP Rules):** Fix tense, grammar, and typos (Our current 8-Layer engine).
 3. **Step 3 (ML Layer):** *Only triggers if confidence is low, or the sentence is highly complex.*
 4. **Step 4 (Beautifier):** Final cleanup of punctuation and conversational tone.
 
