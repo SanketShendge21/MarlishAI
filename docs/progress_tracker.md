@@ -35,14 +35,13 @@ We have pivoted to a **Hybrid Transliteration-First Architecture** utilizing pre
 - Fixed 7-layer → 8-layer terminology across all documentation.
 - Updated `.gitignore` for Python environments and legacy models.
 
-### Phase 1: Test Pre-Trained Models & Pick the Stack
+### Phase 1: Benchmark Models & Measure Transliteration Tax
 **Status: 🔲 In Progress**
-- [ ] Install test dependencies (create `venv`, install `transformers`, `torch`, `sentencepiece`, `indic-transliteration`).
-- [ ] Create `scripts/test_pretrained_models.py` benchmark script.
-- [ ] Test `opus-mt-mr-en` translation quality.
-- [ ] Test `IndicTrans2` translation quality (optional/reference).
-- [ ] Log test results and confirm model choice.
-- [ ] Identify transliteration quality gap (baseline).
+- [ ] Set up Python virtual environment (`venv`).
+- [ ] Install dependencies (`transformers`, `torch`, `sacrebleu`, `ai4bharat-transliteration`).
+- [ ] Create `test_pretrained_models.py` benchmark script.
+- [ ] Measure pure Devanagari → English BLEU (Quality Ceiling).
+- [ ] Measure End-to-End Marlish → English BLEU.
 
 ---
 
