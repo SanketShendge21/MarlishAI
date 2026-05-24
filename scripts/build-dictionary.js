@@ -1,7 +1,7 @@
 const fs = require('fs');
 
-const v1 = JSON.parse(fs.readFileSync('docs/Dictionary_Refs/hinglish_marlish_10000_dataset.json', 'utf8'));
-const v2 = JSON.parse(fs.readFileSync('docs/Dictionary_Refs/hinglish_marlish_v2_25000_dataset.json', 'utf8'));
+const v1 = JSON.parse(fs.readFileSync('datasets/hinglish_marlish_10000_dataset.json', 'utf8'));
+const v2 = JSON.parse(fs.readFileSync('datasets/hinglish_marlish_v2_25000_dataset.json', 'utf8'));
 
 const dict = {
   hinglish_words: {},

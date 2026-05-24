@@ -41,7 +41,8 @@ yarn-error.log*
 next-env.d.ts
 
 # Large Data & Models
-docs/Dictionary_Refs/ml_splits/
+datasets/*.parquet
+datasets/*.csv
 models/
 legacy/models/
 *.zip
