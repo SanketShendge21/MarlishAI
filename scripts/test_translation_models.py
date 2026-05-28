@@ -18,14 +18,39 @@ Usage:
 import sys
 import os
 import time
+import json
 import argparse
 
+# Suppress noisy warnings before any HF imports
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 # Ensure project root is on path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, PROJECT_ROOT)
 
 import torch
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from sacrebleu.metrics import BLEU
+
+# ─────────────────────────────────────────────────────────
+# Load HuggingFace token from .local.env for gated models
+# ─────────────────────────────────────────────────────────
+def load_hf_token():
+    env_path = os.path.join(PROJECT_ROOT, ".local.env")
+    if os.path.exists(env_path):
+        with open(env_path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if "=" in line and "Token" in line:
+                    token = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    os.environ["HF_TOKEN"] = token
+                    print(f"[Auth] HF token loaded from .local.env")
+                    return token
+    print("[Auth] No HF token found in .local.env (gated models may fail)")
+    return None
+
+HF_TOKEN = load_hf_token()
 
 # ─────────────────────────────────────────────────────────
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -129,21 +154,29 @@ def run_benchmark(model_key):
 
     # ── Load model ──
     print(f"[3/3] Loading model: {model_name}")
+    print("    (downloading on first run — please wait)")
     start_load = time.time()
     try:
-        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-        dtype = torch.float16 if DEVICE == "cuda" else torch.float32
+        # Disable tqdm to prevent garbled output during download
+        from transformers.utils import logging as hf_logging
+        hf_logging.set_verbosity_error()
+
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name, trust_remote_code=True, token=HF_TOKEN
+        )
+        model_dtype = torch.float16 if DEVICE == "cuda" else torch.float32
         model = AutoModelForSeq2SeqLM.from_pretrained(
             model_name,
             trust_remote_code=True,
-            torch_dtype=dtype,
+            dtype=model_dtype,
+            token=HF_TOKEN,
         ).to(DEVICE)
     except OSError as e:
         if "gated" in str(e).lower() or "401" in str(e):
             print(f"\n  ❌ Model is GATED. You need to:")
             print(f"     1. Go to https://huggingface.co/{model_name}")
             print(f"     2. Accept the license terms")
-            print(f"     3. Run: huggingface-cli login")
+            print(f"     3. Then set your token in .local.env")
             return None
         raise
     load_time = time.time() - start_load
@@ -266,3 +299,10 @@ if __name__ == "__main__":
         for key, r in all_results.items():
             print(f"  {key:<20} {r['e2e_bleu']:>10.2f} {r['ceiling_bleu']:>14.2f} {r['tax']:>8.2f}")
         print(f"{'=' * 70}")
+
+        # Save results to JSON for reliable retrieval
+        results_path = os.path.join(PROJECT_ROOT, "scripts", "benchmark_results.json")
+        with open(results_path, "w", encoding="utf-8") as f:
+            json.dump(all_results, f, indent=2)
+        print(f"\n  ✅ Results saved to: {results_path}")
+
