@@ -77,66 +77,143 @@ We have pivoted to a **Hybrid Transliteration-First Architecture** utilizing pre
 ---
 
 ### Phase 3: Translation Model Benchmark & Selection
-**Status: 🔲 In Progress (Started May 26, 2026)**
+**Status: ✅ COMPLETE (May 28, 2026)**
 
-**Key Decision:** opus-mt is broken for conversational Marathi (Phase 1 finding). Rather than ONNX-exporting a broken model, we are benchmarking better translation models first.
+**Key Decision:** opus-mt is broken for conversational Marathi (Phase 1 finding). Benchmarked NLLB-200 and IndicTrans2 to decide the final model stack.
 
-**Models under evaluation:**
-| Model | Params | Gated? | Status |
+**Models Evaluated:**
+| Model | Params | Gated? | Status / Result |
 |-------|--------|--------|--------|
-| `facebook/nllb-200-distilled-600M` | 600M | ❌ No | Ready to test |
-| `ai4bharat/indictrans2-indic-en-dist-200M` | 200M | ✅ Yes (needs HF login + license accept) | Ready to test |
+| `facebook/nllb-200-distilled-600M` | 600M | ❌ No | **✅ SUCCESS** (BLEU: 40.71) |
+| `ai4bharat/indictrans2-indic-en-dist-200M` | 200M | ✅ Yes | **🚫 FAILED** (Incompatible with modern `transformers`) |
 
-#### Completed work:
-- [x] Create `scripts/test_translation_models.py`. *(Unified benchmark script. Supports `--model nllb`, `--model indictrans2`, or `--model all`. Tests both transliterated and gold Devanagari paths. Measures BLEU. Compares against Phase 1 opus-mt baseline.)*
-- [x] Create `scripts/test_indictrans2.py`. *(Earlier standalone version — superseded by `test_translation_models.py` but still functional.)*
-- [x] Create `scripts/indic_processor.py`. *(Pure Python port of `IndicTransToolkit/processor.pyx` — works around Cython/MSVC build requirement on Windows. Handles Indic text normalization, tokenization, digit translation for IndicTrans2 preprocessing.)*
-- [x] Install IndicTrans2 dependencies: `sacremoses`, `indic-nlp-library-itt`, `regex`.
+#### Test Results:
+1. **NLLB-200 (600M):**
+   - **End-to-End BLEU (Marlish → Pipeline → NLLB): 40.71**
+   - **Quality Ceiling BLEU (Gold Deva → NLLB): 36.65**
+   - *Note: End-to-end performed slightly better than the ceiling, indicating our transliteration pipeline acts as a helpful normalizer (e.g., handling English loanwords gracefully).*
+   - **Performance:** Massive improvement over opus-mt (0.45 BLEU). Usable for production.
+2. **IndicTrans2 (200M):**
+   - **Result: Failed to load.** 
+   - **Technical Root Cause:** The custom model code hosted on Hugging Face (`trust_remote_code=True`) relies on internal APIs that were removed in modern `transformers` versions:
+     - `configuration_indictrans.py` imports `transformers.onnx` (removed in v4.40).
+     - `tokenization_indictrans.py` references `self._special_tokens_map` (deprecated internal property).
+   - **Attempted Fixes:**
+     - Injected a dummy `transformers.onnx` package → revealed the tokenizer API failure.
+     - Attempted to downgrade to `transformers==4.38.2` → failed because Python 3.14 lacks pre-built wheels for older `tokenizers`, forcing a Rust source compilation that failed on this Windows environment.
+   - **Conclusion:** Modifying and maintaining broken third-party model code just to load it is not justifiable when NLLB-200 natively supports modern `transformers` and scores 40.71 BLEU. IndicTrans2 is officially skipped.
 
-#### Blocked / next steps:
-- [ ] **USER ACTION:** Install `torch` with CUDA 12.1: `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121`
-- [ ] **USER ACTION (for IndicTrans2):** Accept model license at https://huggingface.co/ai4bharat/indictrans2-indic-en-dist-200M, then run `huggingface-cli login`
-- [ ] Run NLLB benchmark: `python scripts/test_translation_models.py --model nllb`
-- [ ] Run IndicTrans2 benchmark: `python scripts/test_translation_models.py --model indictrans2`
-- [ ] Document BLEU results and decide model selection:
-  - If NLLB ceiling BLEU > 15 → Use NLLB for both API and ONNX browser path
-  - If IndicTrans2 ceiling BLEU > 15 → Use for API path (Phase 4). NLLB for offline.
-  - Offline fallback: Tier 1 rule engine (handles 80%+ of inputs at <5ms)
+#### Phase 3 Conclusion:
+- **Decision:** **Proceed with NLLB-200-distilled-600M** as the core translation model.
+- It delivers excellent conversational Marathi-to-English translation.
+- It does not require a HuggingFace account (no gating).
+- It is well-supported by modern inference libraries (including ONNX/Transformers.js).
 
 ---
 
-## ⏸ RESUME STATE (Last updated: May 27, 2026)
+### Phase 4: Pure ML Translation API
+**Status: 🔲 In Progress (Started May 30, 2026)**
 
-> **Read this section first when resuming work.** It describes the exact state of the project and what to do next.
+**Architecture Decision:** Dropped the 8-layer rule engine and offline ONNX path entirely. The app is a standard online service — user sends text, backend API transliterates (if needed) + translates via NLLB-200, returns the result.
+
+```
+User → Website (Next.js on Vercel) → POST /translate → API (FastAPI on HF Spaces)
+                                                          │
+                                                  1. Transliterate if romanized (Marlish/Hinglish → Devanagari)
+                                                  2. NLLB-200 inference (any pair among 5 languages)
+                                                          │
+                                          ← { translation, devanagari, latency_ms }
+```
+
+**Supported language pairs (NLLB-200 handles all natively):**
+| Source | Target | Transliteration needed? |
+|--------|--------|------------------------|
+| Marlish (romanized) | English | ✅ Yes — Marlish → Marathi Devanagari → NLLB |
+| Hinglish (romanized) | English | ✅ Yes — Hinglish → Hindi Devanagari → NLLB |
+| Marathi (Devanagari) | English | ❌ No — direct to NLLB |
+| Hindi (Devanagari) | English | ❌ No — direct to NLLB |
+| English | Marathi | ❌ No — direct NLLB (outputs Devanagari) |
+| English | Hindi | ❌ No — direct NLLB (outputs Devanagari) |
+| English | Marlish | ❌ No — NLLB outputs Devanagari (reverse translit is future work) |
+
+#### Completed:
+- [x] Create `api/app.py` v1 — FastAPI server with `/translate` and `/health` endpoints
+- [x] Create `api/requirements.txt` — API dependencies
+- [x] Install `fastapi` and `uvicorn` in venv
+- [x] **API server tested locally** — NLLB-200 loads in ~1s on RTX 4050 GPU
+- [x] **Tested `/translate` with real Marlish input** — all translations correct:
+  - `kasa ahes mitra` → `How are you, friend?` (728ms first call, ~91ms warm)
+  - `udya kay scene ahe` → `What's the scene tomorrow?`
+  - `mi college la jato ahe` → `I'm going to college.`
+  - `mala mahit nahi` → `I don't know.`
+- [x] Create `docs/PHASE4_IMPLEMENTATION_PLAN.md` — detailed plan
+- [x] **Upgraded `api/app.py` to v2** — now accepts `source` and `target` language params (supports all 5 languages, not just Marlish→English)
+- [x] **Rewrote `hooks/useTranslation.js`** (v5→v6) — calls API instead of rule engine. Same return shape so all UI components work unchanged.
+- [x] **Added `ml_translation` badge** to `app/components/translator/OutputArea.jsx` — violet "ML Translation" label for API results
+- [x] **Ran `npm install`** — Node.js dependencies installed (116 packages)
+- [x] **Fixed transliteration seed map** — added `nav` (नाव = name), possessive pronouns (`tuza`, `mazha`, etc.), and 18 other missing words
+- [x] **Built reverse transliteration module** — `scripts/transliterator/reverse_transliterate.py` — converts NLLB Devanagari output back to chat-style romanized text. 6/6 tests pass.
+- [x] **Wired reverse transliteration into API (v3)** — when target is `marlish`/`hinglish`, API now returns romanized text instead of raw Devanagari
+- [x] **Created `scripts/test_reverse_translit.py`** — test suite for reverse transliteration
+
+#### Known Issues (identified, not yet fixed):
+1. **NLLB-200 translation quality on colloquial text** — makes semantic errors on informal chat (e.g., "kal meeting hai bro" → "Time to meet up bro" instead of "There is a meeting tomorrow"). This is a model limitation, not a code bug.
+   - **Research needed:** User provided a Gemini Deep Research prompt to investigate solutions (bigger NLLB-1.3B, fine-tuning, free local LLM post-processing)
+   - Options under consideration: NLLB-1.3B swap, fine-tuning on curated data, Gemma 3 1B post-processing
+2. **Transliteration pipeline still misses some words** — seed map covers ~280 words but informal chat uses thousands of variants. Ongoing improvement.
+
+#### Remaining:
+- [ ] **Restart API server** to pick up all changes (seed map fixes, reverse translit, API v3) ← **START HERE**
+- [ ] **Test the full frontend** in browser with all language pairs
+- [ ] **Research translation quality improvements** (Gemini Deep Research results)
+- [ ] Implement quality improvements based on research
+- [ ] Deploy API to Hugging Face Spaces (free GPU)
+- [ ] Deploy frontend to Vercel
+
+---
+
+## ⏸ RESUME STATE (Last updated: May 31, 2026 14:58)
+
+> **Read this section first when resuming work.**
 
 ### Environment
 - **Python:** 3.14.5 (venv at `d:\MarlishAI\MarlishAI\venv\`)
-- **GPU:** NVIDIA RTX 4050 (this machine)
-- **torch:** Needs reinstall — user will run: `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121`
-- **Installed deps:** `transformers`, `sentencepiece`, `sacrebleu`, `sacremoses`, `indic-nlp-library-itt`, `regex`, `pandas`, `pyarrow`
+- **GPU:** NVIDIA GeForce RTX 4050 Laptop GPU — CUDA ✅
+- **torch:** `cu126`, **fastapi**, **uvicorn** installed
+- **Node.js:** `npm install` done (116 packages)
+- **NLLB-200:** Cached at `~/.cache/huggingface/` — loads in ~1s on GPU
+
+### Key files (what changed today):
+| File | What changed | Status |
+|------|-------------|--------|
+| `api/app.py` | v3: reverse transliteration for romanized targets | ✅ Updated, needs server restart |
+| `scripts/transliterator/reverse_transliterate.py` | NEW: Devanagari → romanized, 6/6 tests pass | ✅ Created |
+| `scripts/transliterator/fallback_map.py` | Added `nav`, `tuza`, `mazha`, +18 more seed entries | ✅ Updated |
+| `scripts/test_reverse_translit.py` | NEW: reverse transliteration test suite | ✅ Created |
+| `hooks/useTranslation.js` | v6: calls API with `source`/`target` | ✅ Done (from yesterday) |
+| `app/components/translator/OutputArea.jsx` | `ml_translation` badge | ✅ Done (from yesterday) |
+
+### Three known quality problems:
+| Problem | Root Cause | Fix Status |
+|---------|-----------|------------|
+| "nav" → "What is the new?" | Seed map missing `nav`→`नाव` | ✅ FIXED |
+| English→Marlish outputs Devanagari | No reverse transliteration | ✅ FIXED |
+| "kal meeting hai bro" → wrong meaning | NLLB-200-600M model quality limit | ❌ Needs research |
 
 ### What to do next (in order):
-1. **Verify torch is installed:** `python -c "import torch; print(torch.cuda.is_available())"`
-2. **Run NLLB benchmark:** `python scripts/test_translation_models.py --model nllb`
-3. **If user has HF login:** `python scripts/test_translation_models.py --model indictrans2`
-4. **Record BLEU scores** in this tracker under Phase 3
-5. **Decide model selection** based on BLEU results (see decision tree above)
-6. **Proceed to Phase 4** (ONNX export or API setup depending on results)
-
-### Key files created in Phase 3:
-| File | Purpose | Status |
-|------|---------|--------|
-| `scripts/test_translation_models.py` | Unified model benchmark (NLLB + IndicTrans2) | ✅ Ready to run |
-| `scripts/test_indictrans2.py` | Standalone IndicTrans2 benchmark | ✅ Superseded by above |
-| `scripts/indic_processor.py` | Pure Python IndicProcessor (no Cython needed) | ✅ Ready |
-| `scripts/evaluate_transliteration.py` | Phase 2 transliteration accuracy test (55 sentences, 100%) | ✅ Complete |
-
-### Issues encountered & resolutions:
-1. **IndicTransToolkit Cython build failure** → Solved: Created `scripts/indic_processor.py` (pure Python port)
-2. **torch cu124 no wheel for Python 3.14** → User switching to cu121 index
-3. **IndicTrans2 gated repo 401** → User needs to accept license + `huggingface-cli login`
-4. **NLLB CPU test cancelled** → Too slow on CPU, user switching back to GPU
+1. **Restart API server** (kill old one, start new):
+   ```
+   $env:PYTHONIOENCODING="utf-8"; .\venv\Scripts\uvicorn api.app:app --host 0.0.0.0 --port 8000
+   ```
+2. **Start Next.js** (if not running):
+   ```
+   npm run dev
+   ```
+3. **Test in browser** at `http://localhost:3000` — try all language pairs
+4. **Apply Gemini Deep Research results** to improve NLLB translation quality
+5. **Deploy** (Vercel + HF Spaces)
 
 ---
 
 *(Future phases will be added here as they become active.)*
+

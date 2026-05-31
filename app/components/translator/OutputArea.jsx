@@ -28,6 +28,12 @@ const LABEL_CONFIG = {
     color: 'text-orange-400',
     bg: 'bg-orange-400/10',
   },
+  ml_translation: {
+    text: 'ML Translation',
+    icon: CheckCircle2,
+    color: 'text-violet-500',
+    bg: 'bg-violet-500/10',
+  },
 };
 
 export function OutputArea({ text, isLoading, isDictLoading, error, tier, matchLabel, confidence, targetLanguage }) {
