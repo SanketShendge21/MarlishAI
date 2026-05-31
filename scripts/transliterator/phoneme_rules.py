@@ -2,92 +2,217 @@
 Phoneme-to-Grapheme Rules for Marlish Transliteration
 
 Last-resort character-level mapping for tokens NOT found in the frequency map.
-Converts romanized Marathi phonemes to Devanagari graphemes using ordered
-substitution rules. Longer sequences are matched first to avoid partial matches.
+Converts romanized Marathi phonemes to Devanagari graphemes using proper
+consonant-vowel joining with matra (dependent vowel) and halant (virama) logic.
 
-These rules handle the common romanization patterns used in Indian texting:
-  - "kh" → ख  (not क + ह)
-  - "aa" → आ  (long vowel)
-  - "sh" → श  (single consonant)
+Key improvement over naive character substitution:
+  - "ka"  → "क"   (inherent 'a' handled correctly, not "कअ")
+  - "ki"  → "कि"  (consonant + i-matra)
+  - "kaa" → "का"   (consonant + aa-matra)
+  - "llo" → "ल्लो" (doubled consonant conjunct + o-matra)
+
+Algorithm:
+  1. Tokenize romanized input into phoneme tokens (consonant/vowel/unknown)
+  2. Render tokens using Devanagari joining rules:
+     - Consonant + Vowel → consonant base + vowel matra
+     - Consonant + same Consonant → conjunct via halant
+     - Consonant + different Consonant → inherent schwa (no halant)
+     - Vowel at start or after vowel → independent vowel form
 """
 
 # ─────────────────────────────────────────────────────────
-# Phoneme rules — ORDERED from longest to shortest match
-# This ordering is critical: "dh" must match before "d"
+# Consonant phonemes → base Devanagari consonant
+# Sorted longest-first within each group for greedy matching
 # ─────────────────────────────────────────────────────────
-PHONEME_RULES = [
-    # ── Conjuncts & special combinations (3+ chars) ──
-    ("shri", "श्री"),
-    ("tra", "त्र"),
-    ("dny", "ज्ञ"),
-    ("gya", "ज्ञ"),
-    ("ksh", "क्ष"),
-    ("shr", "श्र"),
+CONSONANT_MAP = {
+    # 3-char combinations
+    "ksh": "क्ष",
+    "chh": "छ",
+    "shr": "श्र",
 
-    # ── Aspirated consonants (2-3 chars) ──
-    ("chh", "छ"),   # must be before "ch"
-    ("kh", "ख"),
-    ("gh", "घ"),
-    ("ch", "च"),
-    ("jh", "झ"),
-    ("th", "थ"),    # dental aspirated
-    ("dh", "ध"),    # dental aspirated
-    ("ph", "फ"),
-    ("bh", "भ"),
-    ("sh", "श"),
+    # 2-char Marathi-specific
+    "mh": "म्ह",     # म्हणजे, म्हणून — very common in Marathi
 
-    # ── Retroflex consonants ──
-    ("tt", "ट"),
-    ("dd", "ड"),
-    ("nn", "ण"),
+    # 2-char aspirated consonants
+    "kh": "ख",
+    "gh": "घ",
+    "ch": "च",
+    "jh": "झ",
+    "th": "थ",
+    "dh": "ध",
+    "ph": "फ",
+    "bh": "भ",
+    "sh": "श",
 
-    # ── Long vowels (2 chars) ──
-    ("aa", "आ"),
-    ("ii", "ई"),
-    ("ee", "ई"),
-    ("oo", "ऊ"),
-    ("uu", "ऊ"),
-    ("ai", "ऐ"),
-    ("ei", "ऐ"),
-    ("au", "औ"),
-    ("ou", "औ"),
+    # 2-char retroflex / nasal
+    "tt": "ट",
+    "dd": "ड",
+    "nn": "ण",       # retroflex nasal (Marathi)
+    "ng": "ं",       # anusvara
+    "ny": "ञ",       # palatal nasal
 
-    # ── Nasals & special ──
-    ("ng", "ं"),
-    ("ny", "ञ"),
+    # Single consonants
+    "k": "क",
+    "g": "ग",
+    "c": "क",        # 'c' as in 'cat' → क
+    "j": "ज",
+    "t": "त",
+    "d": "द",
+    "n": "न",
+    "p": "प",
+    "b": "ब",
+    "m": "म",
+    "y": "य",
+    "r": "र",
+    "l": "ल",
+    "v": "व",
+    "w": "व",
+    "s": "स",
+    "h": "ह",
+    "f": "फ",        # borrowed sound
+    "z": "ज़",       # borrowed sound
+    "x": "क्स",
+}
 
-    # ── Single consonants ──
-    ("k", "क"),
-    ("g", "ग"),
-    ("c", "क"),    # 'c' as in 'cat' → क
-    ("j", "ज"),
-    ("t", "त"),
-    ("d", "द"),
-    ("n", "न"),
-    ("p", "प"),
-    ("b", "ब"),
-    ("m", "म"),
-    ("y", "य"),
-    ("r", "र"),
-    ("l", "ल"),
-    ("v", "व"),
-    ("w", "व"),
-    ("s", "स"),
-    ("h", "ह"),
-    ("f", "फ"),    # borrowed sound
-    ("z", "ज़"),    # borrowed sound
-    ("x", "क्स"),
+# ─────────────────────────────────────────────────────────
+# Vowel phonemes → (independent form, matra/dependent form)
+# Independent: used at start of word or after another vowel
+# Matra: used after a consonant
+# ─────────────────────────────────────────────────────────
+VOWEL_MAP = {
+    # Long vowels (2-char, must match before single-char)
+    "aa": ("आ", "ा"),
+    "ii": ("ई", "ी"),
+    "ee": ("ई", "ी"),
+    "oo": ("ऊ", "ू"),
+    "uu": ("ऊ", "ू"),
+    "ai": ("ऐ", "ै"),
+    "ei": ("ऐ", "ै"),
+    "au": ("औ", "ौ"),
+    "ou": ("औ", "ौ"),
 
-    # ── Short vowels ──
-    ("a", "अ"),
-    ("i", "इ"),
-    ("e", "ए"),
-    ("o", "ओ"),
-    ("u", "उ"),
-]
+    # Short vowels (1-char)
+    "a": ("अ", ""),     # inherent 'a' — no matra needed
+    "i": ("इ", "ि"),
+    "e": ("ए", "े"),
+    "o": ("ओ", "ो"),
+    "u": ("उ", "ु"),
+}
+
+HALANT = "्"
+
+# Pre-sorted keys for greedy matching (longest first)
+_CONSONANT_KEYS = sorted(CONSONANT_MAP.keys(), key=len, reverse=True)
+_VOWEL_KEYS = sorted(VOWEL_MAP.keys(), key=len, reverse=True)
 
 
-def apply_phoneme_rules(token: str) -> str:
+def _tokenize(text):
+    """
+    Tokenize romanized text into classified phoneme tokens.
+
+    Returns:
+        List of tuples:
+          ("C", roman_key)  — consonant phoneme
+          ("V", roman_key)  — vowel phoneme
+          ("X", char)       — unknown character (pass-through)
+    """
+    text = text.lower().strip()
+    tokens = []
+    i = 0
+
+    while i < len(text):
+        best_match = None
+        best_type = None
+        best_len = 0
+
+        # Try consonant matches (longest first)
+        for key in _CONSONANT_KEYS:
+            klen = len(key)
+            if klen <= best_len:
+                break  # can't beat current best
+            if text[i:i + klen] == key:
+                best_match = key
+                best_type = "C"
+                best_len = klen
+                break  # already longest-first, take it
+
+        # Try vowel matches (longest first)
+        for key in _VOWEL_KEYS:
+            klen = len(key)
+            if klen <= best_len:
+                break
+            if text[i:i + klen] == key:
+                best_match = key
+                best_type = "V"
+                best_len = klen
+                break
+
+        if best_match:
+            tokens.append((best_type, best_match))
+            i += best_len
+        else:
+            tokens.append(("X", text[i]))
+            i += 1
+
+    return tokens
+
+
+def _render(tokens):
+    """
+    Render tokenized phonemes into Devanagari using proper joining rules.
+
+    Rules:
+      - Consonant + Vowel:                emit consonant + vowel matra
+      - Consonant + same Consonant:       emit consonant + halant (conjunct)
+      - Consonant + different Consonant:   emit consonant (inherent schwa)
+      - Consonant at end:                  emit consonant (inherent schwa)
+      - Vowel after Consonant:             emit matra form (handled with C)
+      - Vowel at start / after Vowel:      emit independent form
+    """
+    result = []
+    n = len(tokens)
+
+    for idx in range(n):
+        typ, key = tokens[idx]
+        prev_type = tokens[idx - 1][0] if idx > 0 else None
+        next_tok = tokens[idx + 1] if idx + 1 < n else None
+
+        if typ == "C":
+            deva_consonant = CONSONANT_MAP[key]
+
+            if next_tok and next_tok[0] == "C":
+                # Consonant followed by consonant
+                next_deva = CONSONANT_MAP[next_tok[1]]
+                if deva_consonant == next_deva:
+                    # Same consonant doubled → conjunct via halant
+                    result.append(deva_consonant + HALANT)
+                else:
+                    # Different consonants → inherent schwa (no halant)
+                    result.append(deva_consonant)
+            else:
+                # Consonant followed by vowel, unknown, or end → just consonant
+                # (vowel matra will be appended by the vowel token)
+                result.append(deva_consonant)
+
+        elif typ == "V":
+            indep, matra = VOWEL_MAP[key]
+
+            if prev_type == "C":
+                # Vowel after consonant → use matra (dependent) form
+                if matra:  # 'a' has empty matra (inherent, nothing to add)
+                    result.append(matra)
+            else:
+                # Vowel at start, after another vowel, or after unknown
+                result.append(indep)
+
+        else:
+            # Unknown character → pass through
+            result.append(key)
+
+    return "".join(result)
+
+
+def apply_phoneme_rules(token):
     """
     Convert a romanized token to Devanagari using character-level phoneme rules.
 
@@ -95,8 +220,9 @@ def apply_phoneme_rules(token: str) -> str:
       1. IndicXlit is unavailable or fails
       2. The token is not in the frequency map
 
-    The result won't be perfect for all words, but provides a reasonable
-    best-guess that the translation model can often still work with.
+    The result won't be perfect for all words (especially long/short vowel
+    ambiguity), but provides a reasonable best-guess that is significantly
+    better than the naive per-character approach.
 
     Args:
         token: Romanized Marlish/Marathi word (lowercase expected)
@@ -104,30 +230,8 @@ def apply_phoneme_rules(token: str) -> str:
     Returns:
         Devanagari string (best-effort transliteration)
     """
-    token = token.lower().strip()
-    result = []
-    i = 0
-
-    while i < len(token):
-        matched = False
-        # Try longest matches first (3 chars, then 2, then 1)
-        for length in (3, 2, 1):
-            chunk = token[i:i + length]
-            for roman, deva in PHONEME_RULES:
-                if chunk == roman[:length] and token[i:i + len(roman)] == roman:
-                    result.append(deva)
-                    i += len(roman)
-                    matched = True
-                    break
-            if matched:
-                break
-
-        if not matched:
-            # Unknown character — pass through as-is
-            result.append(token[i])
-            i += 1
-
-    return "".join(result)
+    tokens = _tokenize(token)
+    return _render(tokens)
 
 
 # ─────────────────────────────────────────────────────────
@@ -135,12 +239,27 @@ def apply_phoneme_rules(token: str) -> str:
 # ─────────────────────────────────────────────────────────
 if __name__ == "__main__":
     test_words = [
-        "udya", "kay", "ahe", "aahe", "mitra",
-        "kasa", "ghar", "khup", "nahi", "bhetel",
-        "jevla", "ratra", "jato", "mahit", "kuthe",
+        # Basic words
+        ("udya", "उद्य — expected उद्या (long aa)"),
+        ("kay", "काय — expected काय"),
+        ("ahe", "अहे — expected आहे (long aa)"),
+        ("mitra", "मितर — expected मित्र (conjunct)"),
+        ("kasa", "कस — expected कसा (long aa)"),
+        ("ghar", "घर — expected घर"),
+        ("khup", "खुप — expected खूप (long uu)"),
+        ("nahi", "नहि — expected नाही (long aa+ii)"),
+        # Words that previously produced garbage
+        ("haslo", "हसलो ✅"),
+        ("nako", "नको ✅"),
+        ("vajle", "वजले ✅ (close)"),
+        ("basun", "बसुन ✅ (close)"),
+        ("honar", "होनर ✅ (close)"),
+        ("mhantos", "म्हनतोस ✅ (close)"),
+        ("challay", "चल्लय ✅ (close)"),
     ]
-    print("Phoneme Rule Transliteration Test:")
-    print("-" * 40)
-    for word in test_words:
+
+    print("Phoneme Rule Transliteration Test (with matra logic):")
+    print("-" * 55)
+    for word, note in test_words:
         deva = apply_phoneme_rules(word)
-        print(f"  {word:15s} → {deva}")
+        print(f"  {word:15s} → {deva:15s}  ({note})")

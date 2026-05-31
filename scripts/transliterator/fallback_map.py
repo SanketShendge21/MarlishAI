@@ -142,6 +142,32 @@ SEED_MAP = {
     "mulga": "मुलगा",
     "mulgi": "मुलगी",
     "mule": "मुले",
+    "nav": "नाव",       # name (NOT नव = new)
+    "naav": "नाव",
+    "paisa": "पैसा",
+    "paise": "पैसे",
+    "vel": "वेळ",        # time
+    "divas": "दिवस",    # day
+    "rasta": "रस्ता",    # road
+    "gaadi": "गाडी",    # vehicle
+    "phone": "फोन",
+    "photo": "फोटो",
+
+    # ── Possessive pronouns ──
+    "tuza": "तुझा",     # your (masc)
+    "tuzi": "तुझी",     # your (fem)
+    "tuze": "तुझे",     # your (neut)
+    "mazha": "माझा",    # my (masc)
+    "mazi": "माझी",     # my (fem)
+    "maze": "माझे",     # my (neut)
+    "tyacha": "त्याचा", # his
+    "tyachi": "त्याची",
+    "tyache": "त्याचे",
+    "ticha": "तिचा",    # her
+    "tichi": "तिची",
+    "tiche": "तिचे",
+    "amcha": "आमचा",    # our
+    "tumcha": "तुमचा",  # your (formal)
 
     # ── Adjectives & adverbs ──
     "khup": "खूप",
@@ -201,6 +227,53 @@ SEED_MAP = {
     "thamb": "थांब",
     "ahes": "आहेस",
     "ahet": "आहेत",
+
+    # ── Demonstratives ──
+    "he": "हे",        # this (neuter)
+    "ha": "हा",        # this (masculine)
+    "hya": "ह्या",     # this (oblique)
+    "tya": "त्या",     # that (oblique)
+
+    # ── Marathi म्ह- prefix verbs ──
+    "mhanto": "म्हणतो",
+    "mhantos": "म्हणतोस",
+    "mhante": "म्हणते",
+    "mhanala": "म्हणाला",
+    "mhanali": "म्हणाली",
+    "mhantat": "म्हणतात",
+
+    # ── Additional common verbs ──
+    "honar": "होणार",
+    "nako": "नको",
+    "nakos": "नकोस",
+    "basun": "बसून",
+    "lagla": "लागला",
+    "lagli": "लागली",
+    "lagali": "लागली",
+    "lagale": "लागले",
+    "takla": "टाकला",
+    "takli": "टाकली",
+    "takle": "टाकले",
+    "vatla": "वाटला",
+    "vatli": "वाटली",
+    "vatle": "वाटले",
+    "haslo": "हसलो",
+    "hasli": "हसली",
+    "hasle": "हसले",
+    "jaycha": "जायचा",
+    "jauycha": "जाऊयचा",
+    "yaycha": "यायचा",
+    "vajle": "वाजले",
+    "challay": "चाल्लय",
+    "bhetuyaa": "भेटूया",
+    "piyaycha": "पियायचा",
+    "tayar": "तयार",
+
+    # ── Additional common nouns / adj ──
+    "bhuk": "भूक",
+    "thoda": "थोडा",
+    "thodi": "थोडी",
+    "thodya": "थोड्या",
 }
 
 
@@ -222,19 +295,24 @@ def load_dataset_map(map_path: str = None) -> dict:
             "public", "transliteration_map.json"
         )
 
-    combined = dict(SEED_MAP)  # start with seed
+    combined = {}
 
     if os.path.exists(map_path):
         try:
             with open(map_path, "r", encoding="utf-8") as f:
                 dataset_map = json.load(f)
-            # Dataset map takes priority (higher frequency = more accurate)
+            # Load dataset entries first (frequency-ranked, broad coverage)
             combined.update(dataset_map)
             print(f"  [fallback_map] Loaded {len(dataset_map)} entries from {map_path}")
         except Exception as e:
             print(f"  [fallback_map] Warning: Could not load {map_path}: {e}")
     else:
-        print(f"  [fallback_map] No dataset map found at {map_path}, using seed map ({len(SEED_MAP)} entries)")
+        print(f"  [fallback_map] No dataset map found at {map_path}, using seed map only ({len(SEED_MAP)} entries)")
+
+    # Seed map OVERRIDES dataset — curated Marathi forms take priority
+    # over frequency-ranked entries (which may have Hindi forms like
+    # नहीं instead of Marathi नाही)
+    combined.update(SEED_MAP)
 
     return combined
 

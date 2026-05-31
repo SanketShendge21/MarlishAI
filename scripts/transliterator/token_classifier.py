@@ -38,6 +38,23 @@ ENGLISH_PASSTHROUGH = {
     "friend", "brother", "sister",
     "message", "call", "text", "whatsapp", "instagram", "facebook",
 
+    # Additional loanwords commonly used in Indian chat
+    "shopping", "book", "photo", "photos", "boring", "exam", "exams",
+    "hotel", "gym", "bike", "car", "tv", "app",
+    "online", "offline", "download", "upload",
+    "battery", "charger", "network", "data", "signal",
+    "selfie", "status", "story", "reel",
+    "like", "comment", "follow", "post", "block",
+    "profile", "account", "login", "logout", "password",
+    "link", "page", "group", "chat",
+    "meme", "gif", "emoji", "sticker",
+    "nice", "great", "good", "bad", "best", "worst",
+    "happy", "sad", "angry", "tired", "bored", "excited",
+    "boss", "sir", "madam",
+    "ticket", "pass", "seat", "bag",
+    "order", "delivery", "payment",
+    "reply", "forward", "edit", "delete", "copy", "paste",
+
     # Conjunctions & prepositions sometimes used in English within Marlish
     "and", "but", "or", "for", "with", "from", "to", "at", "in", "on",
     "the", "a", "an", "is", "are", "was", "were", "will", "can",
