@@ -42,7 +42,7 @@ from scripts.transliterator.fallback_map import SEED_MAP
 # ─────────────────────────────────────────────────────────
 # Config
 # ─────────────────────────────────────────────────────────
-MODEL_NAME = "facebook/nllb-200-distilled-600M"
+MODEL_NAME = "facebook/nllb-200-1.3B"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Map frontend language codes → NLLB language codes

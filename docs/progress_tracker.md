@@ -156,23 +156,42 @@ User → Website (Next.js on Vercel) → POST /translate → API (FastAPI on HF 
 - [x] **Wired reverse transliteration into API (v3)** — when target is `marlish`/`hinglish`, API now returns romanized text instead of raw Devanagari
 - [x] **Created `scripts/test_reverse_translit.py`** — test suite for reverse transliteration
 
-#### Known Issues (identified, not yet fixed):
-1. **NLLB-200 translation quality on colloquial text** — makes semantic errors on informal chat (e.g., "kal meeting hai bro" → "Time to meet up bro" instead of "There is a meeting tomorrow"). This is a model limitation, not a code bug.
-   - **Research needed:** User provided a Gemini Deep Research prompt to investigate solutions (bigger NLLB-1.3B, fine-tuning, free local LLM post-processing)
-   - Options under consideration: NLLB-1.3B swap, fine-tuning on curated data, Gemma 3 1B post-processing
-2. **Transliteration pipeline still misses some words** — seed map covers ~280 words but informal chat uses thousands of variants. Ongoing improvement.
+#### Known Issues (identified, being addressed):
+1. **NLLB-200 translation quality on colloquial text** — semantic errors on informal chat.
+   - **Action taken:** Swapped from NLLB-200-distilled-600M to **NLLB-200-1.3B** (2x bigger, better quality)
+   - **Needs testing** — restart API server to download and test NLLB-1.3B
+2. **Transliteration pipeline still misses some words** — seed map covers ~280 words. Ongoing improvement.
 
-#### Remaining:
-- [ ] **Restart API server** to pick up all changes (seed map fixes, reverse translit, API v3) ← **START HERE**
+#### Gemini Deep Research Results (saved to `docs/GEMINI_RESEARCH_TRANSLATION_QUALITY.md`):
+Key findings from the research:
+- **NLLB-1.3B** is better but still has formal-domain bias (trained on FLORES/Wikipedia, not chat)
+- **IndicTrans2** is the clear winner for colloquial Hindi/Marathi — trained on BPCC conversational corpus
+  - `indictrans2-indic-en-1B` → ~4.5GB VRAM in FP16, fits RTX 4050
+  - `indictrans2-indic-en-dist-200M` → ~950MB VRAM, very fast
+  - **Problem:** HuggingFace integration broken on modern `transformers` (we confirmed this previously)
+  - **Potential fix:** Use CTranslate2 runtime or try the distilled 200M variant which may have different code
+- **Gemma 3 1B** as a post-processing GEC layer → ~0.8GB VRAM in 4-bit, can fix grammar after NLLB
+- **QLoRA fine-tuning** on 500-2000 curated pairs → fits on RTX 4050 with 4-bit NF4 quantization
+- **IndicXlit** for reverse transliteration → trained on Aksharantar (26M word pairs), handles schwa deletion natively
+- **L3Cube-MahaBERT** for context-aware transliteration disambiguation → ~800MB, reranks ambiguous tokens
+
+#### Quality Improvement Roadmap (in priority order):
+1. [x] **Swap to NLLB-1.3B** — done, needs testing
+2. [ ] **Test NLLB-1.3B** on the 3 problem sentences
+3. [ ] **Try IndicTrans2 distilled-200M** — check if it has the same `transformers.onnx` bug
+4. [ ] **Add Gemma 3 1B post-processing** — GEC layer to fix grammar after translation
+5. [ ] **Fine-tune with QLoRA** on curated Marlish→English pairs (if needed)
+6. [ ] **Integrate IndicXlit** for better reverse transliteration (replaces our character-level rules)
+
+#### Remaining (deployment):
+- [ ] **Restart API server** and test NLLB-1.3B ← **START HERE**
 - [ ] **Test the full frontend** in browser with all language pairs
-- [ ] **Research translation quality improvements** (Gemini Deep Research results)
-- [ ] Implement quality improvements based on research
 - [ ] Deploy API to Hugging Face Spaces (free GPU)
 - [ ] Deploy frontend to Vercel
 
 ---
 
-## ⏸ RESUME STATE (Last updated: May 31, 2026 14:58)
+## ⏸ RESUME STATE (Last updated: June 3, 2026 19:00)
 
 > **Read this section first when resuming work.**
 
@@ -181,37 +200,27 @@ User → Website (Next.js on Vercel) → POST /translate → API (FastAPI on HF 
 - **GPU:** NVIDIA GeForce RTX 4050 Laptop GPU — CUDA ✅
 - **torch:** `cu126`, **fastapi**, **uvicorn** installed
 - **Node.js:** `npm install` done (116 packages)
-- **NLLB-200:** Cached at `~/.cache/huggingface/` — loads in ~1s on GPU
+- **NLLB-200-1.3B:** NOT YET DOWNLOADED — will auto-download on first API start (~5GB)
 
-### Key files (what changed today):
+### Key changes today:
 | File | What changed | Status |
 |------|-------------|--------|
-| `api/app.py` | v3: reverse transliteration for romanized targets | ✅ Updated, needs server restart |
-| `scripts/transliterator/reverse_transliterate.py` | NEW: Devanagari → romanized, 6/6 tests pass | ✅ Created |
-| `scripts/transliterator/fallback_map.py` | Added `nav`, `tuza`, `mazha`, +18 more seed entries | ✅ Updated |
-| `scripts/test_reverse_translit.py` | NEW: reverse transliteration test suite | ✅ Created |
-| `hooks/useTranslation.js` | v6: calls API with `source`/`target` | ✅ Done (from yesterday) |
-| `app/components/translator/OutputArea.jsx` | `ml_translation` badge | ✅ Done (from yesterday) |
-
-### Three known quality problems:
-| Problem | Root Cause | Fix Status |
-|---------|-----------|------------|
-| "nav" → "What is the new?" | Seed map missing `nav`→`नाव` | ✅ FIXED |
-| English→Marlish outputs Devanagari | No reverse transliteration | ✅ FIXED |
-| "kal meeting hai bro" → wrong meaning | NLLB-200-600M model quality limit | ❌ Needs research |
+| `api/app.py` | v4: swapped model to `facebook/nllb-200-1.3B` | ✅ Updated, needs restart + model download |
+| `docs/GEMINI_RESEARCH_TRANSLATION_QUALITY.md` | Saved Gemini Deep Research results | ✅ Saved |
 
 ### What to do next (in order):
-1. **Restart API server** (kill old one, start new):
+1. **Restart API server** (model will download ~5GB on first start):
    ```
    $env:PYTHONIOENCODING="utf-8"; .\venv\Scripts\uvicorn api.app:app --host 0.0.0.0 --port 8000
    ```
-2. **Start Next.js** (if not running):
+2. **Test the 3 problem sentences:**
+   ```powershell
+   Invoke-RestMethod -Uri http://localhost:8000/translate -Method POST -Body '{"text": "Kal meeting hai bro", "source": "hinglish", "target": "english"}' -ContentType "application/json"
+   Invoke-RestMethod -Uri http://localhost:8000/translate -Method POST -Body '{"text": "Tuza nav kay ahe", "source": "marlish", "target": "english"}' -ContentType "application/json"
+   Invoke-RestMethod -Uri http://localhost:8000/translate -Method POST -Body '{"text": "Where are you", "source": "english", "target": "marlish"}' -ContentType "application/json"
    ```
-   npm run dev
-   ```
-3. **Test in browser** at `http://localhost:3000` — try all language pairs
-4. **Apply Gemini Deep Research results** to improve NLLB translation quality
-5. **Deploy** (Vercel + HF Spaces)
+3. If NLLB-1.3B still has quality issues, try IndicTrans2 distilled-200M next
+4. **Deploy** (Vercel + HF Spaces)
 
 ---
 
