@@ -31,7 +31,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"[Device] Using: {DEVICE}")
 if DEVICE == "cuda":
     print(f"[Device] GPU: {torch.cuda.get_device_name(0)}")
-    print(f"[Device] VRAM: {torch.cuda.get_device_properties(0).total_mem / 1024**3:.1f} GB")
+    print(f"[Device] VRAM: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
 
 # ─────────────────────────────────────────────────────────
 # Test sentences: (marlish_input, gold_devanagari, expected_english)
