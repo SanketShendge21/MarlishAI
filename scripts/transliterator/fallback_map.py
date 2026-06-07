@@ -274,7 +274,106 @@ SEED_MAP = {
     "thoda": "थोडा",
     "thodi": "थोडी",
     "thodya": "थोड्या",
+
+    # ── Missing words from quality tests (June 2026) ──
+    # Test 5: "Jevay" food/eating words
+    "jevay": "जेवाय",         # to eat (infinitive colloquial)
+    "jevayla": "जेवायला",     # for eating / to eat
+    "jevlas": "जेवलास",       # did you eat? (2nd person)
+    "jevaycha": "जेवायचा",   # about eating
+    "jevto": "जेवतो",        # eats (masc)
+    "jevte": "जेवते",        # eats (fem)
+    "jevat": "जेवात",        # while eating
+
+    # Test 2: "yeshil" will come/go forms
+    "yeshil": "येशील",        # will you come
+    "yenar": "येणार",         # going to come
+    "yein": "येईन",          # I will come
+    "yeil": "येईल",          # he/she will come
+    "yeu": "येऊ",            # let's come
+    "yeun": "येऊन",          # having come
+    "janar": "जाणार",         # going to go
+    "janar ahe": "जाणार आहे",
+    "jain": "जाईन",          # I will go
+    "jail": "जाईल",          # he/she will go
+    "jayche": "जायचे",       # to go (neuter)
+
+    # Test 8: "vaat baghte" = waiting (NOT cattle)
+    "vaat": "वाट",            # path / waiting (NOT वात = wick)
+    "vaato": "वाटो",
+    "baghte": "बघते",         # watches/waits (fem)
+    "baghto": "बघतो",         # watches/waits (masc)
+    "baghtoy": "बघतोय",       # is watching (masc ongoing)
+    "baghtey": "बघतेय",       # is watching (fem ongoing)
+    "thaklo": "थकलो",         # tired (1st person masc)
+    "thakli": "थकली",         # tired (1st person fem)
+    "thakla": "थकला",         # tired (3rd person masc)
+
+    # Test 12: Indian food words (NLLB doesn't know these)
+    "poha": "पोहा",           # flattened rice dish
+    "vada": "वडा",            # fried snack
+    "pav": "पाव",             # bread
+    "bhaji": "भाजी",          # vegetable curry
+    "dal": "डाळ",             # lentils
+    "roti": "रोटी",           # flatbread
+    "chai": "चाय",            # tea
+    "puri": "पुरी",            # fried bread
+    "samosa": "समोसा",
+    "chutney": "चटणी",
+
+    # Test 6: "urgent lagto" — common urgency/feeling words
+    "urgent": "अर्जंट",       # keep as-is loanword
+    "lagto": "लागतो",         # feels / is needed
+    "lagte": "लागते",
+    "pahije": "पाहिजे",       # is needed / want
+    "hava": "हवा",            # is needed (informal)
+    "havi": "हवी",
+
+    # Common chat words still missing
+    "bhai": "भाई",            # brother/bro
+    "yaar": "यार",            # dude
+    "bro": "ब्रो",
+    "scene": "सीन",           # scene/plan
+    "busy": "बिझी",
+    "boring": "बोरिंग",
+    "meeting": "मीटिंग",
+    "college": "कॉलेज",
+    "office": "ऑफिस",
+    "exam": "परीक्षा",
+    "party": "पार्टी",
+    "coffee": "कॉफी",
+    "train": "ट्रेन",
+    "picnic": "पिकनिक",
+    "call": "कॉल",
+    "mood": "मूड",
+
+    # Common Marathi verb forms still missing
+    "baher": "बाहेर",          # outside
+    "thandi": "थंडी",         # cold
+    "khush": "खुश",           # happy
+    "pass": "पास",            # pass (exam)
+    "zalo": "झालो",           # became / happened (1st person)
+    "zala": "झाला",           # became / happened (masc)
+    "zali": "झाली",           # became / happened (fem)
+    "zale": "झाले",           # became / happened (neut/pl)
+
+    # Hindi words for Hinglish support
+    "kal": "कल",              # yesterday/tomorrow (Hindi)
+    "hai": "है",              # is (Hindi)
+    "hain": "हैं",            # are (Hindi)
+    "kuch": "कुछ",            # something (Hindi)
+    "mat": "मत",              # don't (Hindi)
+    "mera": "मेरा",           # my (Hindi)
+    "tera": "तेरा",           # your (Hindi)
+    "kidhar": "किधर",         # where (Hindi colloquial)
+    "chalte": "चलते",         # let's go / walk (Hindi)
+    "dekhne": "देखने",        # to watch (Hindi)
+    "padha": "पढ़ा",          # studied (Hindi)
+    "aaya": "आया",            # came (Hindi)
+    "banaya": "बनाया",        # made (Hindi)
+    "tumhare": "तुम्हारे",    # your (Hindi)
 }
+
 
 
 def load_dataset_map(map_path: str = None) -> dict:
