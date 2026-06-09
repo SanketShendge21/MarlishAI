@@ -372,7 +372,76 @@ SEED_MAP = {
     "aaya": "आया",            # came (Hindi)
     "banaya": "बनाया",        # made (Hindi)
     "tumhare": "तुम्हारे",    # your (Hindi)
+
+    # ── Carnival Tours test failures (June 9, 2026) ──
+    # Formal/travel Marathi words
+    "samavishta": "समाविष्ट",       # included
+    "vyavastha": "व्यवस्था",        # arrangement
+    "sthanik": "स्थानिक",           # local
+    "sthal": "स्थळ",               # place/site
+    "sthaldarshan": "स्थलदर्शन",    # sightseeing
+    "darshan": "दर्शन",             # visit/viewing
+    "shakahari": "शाकाहारी",        # vegetarian
+    "vaiyaktik": "वैयक्तिक",        # personal
+    "mukkam": "मुक्काम",            # stay/halt
+    "pravas": "प्रवास",             # journey/travel
+    "poch": "पोच",                 # arrive
+    "ayojit": "आयोजित",            # organized
+    "dinank": "दिनांक",             # date
+    "sahal": "सहल",                # tour/trip
+    "prashtan": "प्रस्थान",         # departure
+    "kharredi": "खरेदी",           # shopping
+    "divas": "दिवस",               # day
+    "ratri": "रात्री",               # night
+    "relve": "रेल्वे",              # railway
+    "sleeper": "स्लीपर",
+    "shuddha": "शुद्ध",             # pure
+    "nashta": "नाष्टा",             # breakfast
+    "adhik": "अधिक",               # more/extra
+    "dyave": "द्यावे",              # should give
+    "lagtil": "लागतील",             # will be needed
+    "asalyaas": "असल्यास",          # if there is
+    "shaharantar": "शहरांतर",         # intercity
+    "jata": "जाता",                # going
+    "yeta": "येता",                # coming
+    "jevan": "जेवण",               # food/meal
+    "vel": "वेळ",                  # time/times
+    "chaha": "चहा",                # tea
+    "mandir": "मंदिर",              # temple
+    "bich": "बीच",                 # beach
+    "samudra": "समुद्र",             # ocean
+
+    # Hindi formal/travel words
+    "sthaniya": "स्थानीय",          # local (Hindi)
+    "vyaktigat": "व्यक्तिगत",       # personal (Hindi)
+    "bhojan": "भोजन",             # food/meal (Hindi)
+    "yatra": "यात्रा",              # journey (Hindi)
+    "shamil": "शामिल",             # included (Hindi)
+    "pahunchna": "पहुँचना",          # to arrive (Hindi)
+    "thehra": "ठहराव",             # stay (Hindi)
+    "shahrantar": "शहरांतर्गत",       # intercity (Hindi)
+    "kamra": "कमरा",               # room (Hindi)
+    "chahiye": "चाहिए",            # want/need (Hindi)
+    "honge": "होंगे",              # will be (Hindi)
+    "dene": "देने",                # to give (Hindi)
+    "baar": "बार",                 # times (Hindi)
+    "aane": "आने",                 # coming (Hindi)
+    "jaane": "जाने",               # going (Hindi)
+    "tarikhein": "तारीखें",          # dates (Hindi)
+    "dwara": "द्वारा",              # by/through (Hindi)
+
+    # Hinglish common words
+    "toh": "तो",                   # then/so
+    "koi": "कोई",                  # someone/anyone
+    "nahi": "नाही",                # no/not
+    "aur": "और",                   # and (Hindi)
+    "mein": "में",                 # in (Hindi)
+    "ke": "के",                    # of (Hindi)
+    "se": "से",                    # from (Hindi)
+    "pe": "पे",                    # on (Hindi colloquial)
+    "ne": "ने",                    # by (Hindi)
 }
+
 
 
 

@@ -162,12 +162,17 @@ def _render(tokens):
     Render tokenized phonemes into Devanagari using proper joining rules.
 
     Rules:
-      - Consonant + Vowel:                emit consonant + vowel matra
-      - Consonant + same Consonant:       emit consonant + halant (conjunct)
-      - Consonant + different Consonant:   emit consonant (inherent schwa)
-      - Consonant at end:                  emit consonant (inherent schwa)
-      - Vowel after Consonant:             emit matra form (handled with C)
-      - Vowel at start / after Vowel:      emit independent form
+      - Consonant + Vowel:              emit consonant + vowel matra
+      - Consonant + Consonant:           emit consonant + halant (conjunct)
+      - Consonant at end:                emit consonant (inherent schwa)
+      - Vowel after Consonant:           emit matra form (handled with C)
+      - Vowel at start / after Vowel:    emit independent form
+
+    KEY FIX (June 9, 2026): ALL consecutive consonants now get halant,
+    not just doubled consonants. This produces correct conjuncts:
+      st → स्त  (not सत)
+      vy → व्य  (not वय)
+      pr → प्र  (not पर)
     """
     result = []
     n = len(tokens)
@@ -181,14 +186,8 @@ def _render(tokens):
             deva_consonant = CONSONANT_MAP[key]
 
             if next_tok and next_tok[0] == "C":
-                # Consonant followed by consonant
-                next_deva = CONSONANT_MAP[next_tok[1]]
-                if deva_consonant == next_deva:
-                    # Same consonant doubled → conjunct via halant
-                    result.append(deva_consonant + HALANT)
-                else:
-                    # Different consonants → inherent schwa (no halant)
-                    result.append(deva_consonant)
+                # Consonant followed by consonant → conjunct via halant
+                result.append(deva_consonant + HALANT)
             else:
                 # Consonant followed by vowel, unknown, or end → just consonant
                 # (vowel matra will be appended by the vowel token)

@@ -7,7 +7,7 @@ import json
 import time
 
 API = "http://localhost:8000/translate"
-OUTPUT_FILE = "docs/TRANSLATION_TEST_RESULTS.md"
+OUTPUT_FILE = "docs/test-results/TRANSLATION_TEST_RESULTS.md"
 
 # ─────────────────────────────────────────────────────────
 # Test cases: (source_lang, target_lang, input_text, expected_meaning)

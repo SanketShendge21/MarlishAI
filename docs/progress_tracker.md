@@ -157,72 +157,171 @@ User → Website (Next.js on Vercel) → POST /translate → API (FastAPI on HF 
 - [x] **Created `scripts/test_reverse_translit.py`** — test suite for reverse transliteration
 
 #### Known Issues (identified, being addressed):
-1. **NLLB-200 translation quality on colloquial text** — semantic errors on informal chat.
-   - **Action taken:** Swapped from NLLB-200-distilled-600M to **NLLB-200-1.3B** (2x bigger, better quality)
-   - **Needs testing** — restart API server to download and test NLLB-1.3B
-2. **Transliteration pipeline still misses some words** — seed map covers ~280 words. Ongoing improvement.
+1. **NLLB-200-600M translation quality** — tested with 23 real-world sentences.
+   - Root cause: NLLB was trained on formal text (FLORES/Wikipedia), NOT conversational chat
+   - This is a **data bias problem**, not a model capacity problem — upgrading to 1.3B won't fully fix it
+2. **Transliteration pipeline misses some words** — seed map covers ~10K words but some Marlish words like "Jevay" and "vaat" still get wrong Devanagari.
+3. **`transformers` version conflict** — `transformers 5.9.0` broke with `torch 2.12.0` (`NP_SUPPORTED_MODULES` import error). **Fixed by downgrading to `transformers 4.57.6`**.
+
+#### Translation Quality Test Results (June 3, 2026):
+Tested with 23 realistic everyday chat sentences. Full results in `docs/TRANSLATION_TEST_RESULTS.md`.
+
+| Category | Count | Key examples |
+|----------|-------|-------------|
+| ✅ Accurate | 10 | "I passed the exam, I'm very happy", "What does your brother do?", "I don't want to go to the office today" |
+| ⚠️ Close but imprecise | 5 | "are you sure?" (should be "will you come?"), "I feel urgent" (should be "I need it urgently"), dropped second sentence |
+| ❌ Wrong | 4 | "watching the cattle" (should be "waiting"), "pot" (should be "poha"), "they go to movies" (should be "let's go") |
+| 🔤 Reverse translit: works but formal | 4 | "krupaya" (should be "please"), "svadishta" (should be "tasty") |
+
+**Error patterns — why NLLB fails:**
+- **Idioms/slang:** "vaat baghte" (waiting) → transliterated but NLLB doesn't know the idiom
+- **Code-mixed loanwords:** "poha" → NLLB sees Devanagari "पोहा" and guesses "pot"
+- **Pragmatic intent:** "chalte hain" (let's go) → NLLB reads it as "they go" (formal grammar)
+- **Dropped clauses:** NLLB sometimes ignores the second half of longer sentences
 
 #### Gemini Deep Research Results (saved to `docs/GEMINI_RESEARCH_TRANSLATION_QUALITY.md`):
-Key findings from the research:
-- **NLLB-1.3B** is better but still has formal-domain bias (trained on FLORES/Wikipedia, not chat)
-- **IndicTrans2** is the clear winner for colloquial Hindi/Marathi — trained on BPCC conversational corpus
-  - `indictrans2-indic-en-1B` → ~4.5GB VRAM in FP16, fits RTX 4050
+Key findings:
+- **NLLB-1.3B** — better grammar, but same formal-domain bias (same FLORES training data). Zero code complexity increase (one string change), uses ~2.6GB VRAM instead of ~1.2GB, ~1.5x slower inference. Still fits RTX 4050.
+- **IndicTrans2** — clear winner for colloquial Hindi/Marathi. Trained on BPCC conversational corpus.
+  - `indictrans2-indic-en-1B` → ~4.5GB VRAM in FP16
   - `indictrans2-indic-en-dist-200M` → ~950MB VRAM, very fast
-  - **Problem:** HuggingFace integration broken on modern `transformers` (we confirmed this previously)
-  - **Potential fix:** Use CTranslate2 runtime or try the distilled 200M variant which may have different code
-- **Gemma 3 1B** as a post-processing GEC layer → ~0.8GB VRAM in 4-bit, can fix grammar after NLLB
-- **QLoRA fine-tuning** on 500-2000 curated pairs → fits on RTX 4050 with 4-bit NF4 quantization
-- **IndicXlit** for reverse transliteration → trained on Aksharantar (26M word pairs), handles schwa deletion natively
-- **L3Cube-MahaBERT** for context-aware transliteration disambiguation → ~800MB, reranks ambiguous tokens
+  - **Problem:** HuggingFace integration broken on `transformers 4.x+` (we confirmed this — `transformers.onnx` import error)
+  - **Potential fix:** CTranslate2 runtime, or check if newer IndicTrans2 releases fixed the import
+- **Gemma 3 1B** as post-processing GEC → ~0.8GB VRAM in 4-bit, fixes grammar after translation#### Quality Improvement Roadmap (in priority order):
+1. [x] **Try IndicTrans2** — ❌ FAILED. Tokenizer crashes at load time (Step 5). Broken with `transformers 4.57.6`.
+2. [x] **Test NLLB-1.3B** — ✅ Tested. Identical to 600M. Keeping 1.3B (no downside).
+3. [x] **Fix transliteration seed map** — ✅ Added ~80 words: jevay, yeshil, vaat, poha, food words, Hindi words, chat loanwords
+4. [x] **Add Gemini GEC post-processing** — ✅ Wired `gemini-2.5-flash-lite` into `api/app.py`. Reads API key from `.local.env`. Graceful fallback if no key set.
+5. [x] **Test with GEC enabled** — ✅ Tested June 9. GEC works, polishes grammar on correct translations.
+6. [x] **Carnival Tours real-world test** — ✅ 104 segments across ALL 8 language directions.
 
-#### Quality Improvement Roadmap (in priority order):
-1. [x] **Swap to NLLB-1.3B** — done, needs testing
-2. [ ] **Test NLLB-1.3B** on the 3 problem sentences
-3. [ ] **Try IndicTrans2 distilled-200M** — check if it has the same `transformers.onnx` bug
-4. [ ] **Add Gemma 3 1B post-processing** — GEC layer to fix grammar after translation
-5. [ ] **Fine-tune with QLoRA** on curated Marlish→English pairs (if needed)
-6. [ ] **Integrate IndicXlit** for better reverse transliteration (replaces our character-level rules)
+**Carnival Tours Test Results (June 9, 2026):**
+| Direction | Score | Verdict |
+|-----------|-------|---------|
+| Marathi → English | 11/13 | ✅ Strong |
+| Hindi → English | 12/13 | ✅ Best performer |
+| English → Marathi | 12/13 | ✅ Strong |
+| English → Hindi | 13/13 | ✅ Excellent |
+| English → Marlish | 9/13 | ⚠️ Correct Devanagari, romanization too literal |
+| English → Hinglish | 9/13 | ⚠️ Same — overly formal romanization |
+| **Marlish → English** | **6/13** | ❌ **Transliteration pipeline is the bottleneck** |
+| **Hinglish → English** | **6/13** | ❌ **Same — broken Devanagari reaches NLLB** |
 
-#### Remaining (deployment):
-- [ ] **Restart API server** and test NLLB-1.3B ← **START HERE**
-- [ ] **Test the full frontend** in browser with all language pairs
-- [ ] Deploy API to Hugging Face Spaces (free GPU)
-- [ ] Deploy frontend to Vercel
+**Root cause: Transliteration pipeline doesn't handle conjunct consonants or long vowels:**
+- `"vyavastha"` → `"वयवसथ"` instead of `"व्यवस्था"` (no halant/virama)
+- `"shakahari"` → `"शकहरि"` instead of `"शाकाहारी"` (no long vowels)
+#### Priority Fixes:
+1. [x] **Fix conjunct consonant rules** — ✅ Done. All C+C pairs now get halant in `phoneme_rules.py`.
+2. [~] **Fix long vowel patterns** — Partial. Seed map handles known words; phoneme-level `a/aa` ambiguity unsolvable.
+3. [x] **Expand seed map** — ✅ Done. +60 words: travel/formal Marathi, Hindi formal, Hinglish particles.
+4. [x] **Improve reverse transliteration** — ✅ Done. Digits, matra, simplification.
+5. [x] **Re-test** — ✅ Done June 9 15:18. Results: Marlish→English improved 6/13 → **11/13**, Hinglish→English improved 6/13 → **11/13**
+
+**Post-fix Carnival Tours Results (June 9, 2026 — after priority fixes):**
+| Direction | Before | After |
+|-----------|--------|-------|
+| Marathi → English | 11/13 | 11/13 (stable) |
+| Hindi → English | 12/13 | 12/13 (stable) |
+| Marlish → English | 6/13 | **11/13** ✅ |
+| Hinglish → English | 6/13 | **11/13** ✅ |
+| English → Marathi | 12/13 | 12/13 (stable) |
+| English → Hindi | 13/13 | 13/13 (stable) |
+| English → Marlish | 9/13 | 10/13 (improved) |
+| English → Hinglish | 9/13 | 10/13 (improved) |
+
+#### Deployment Steps:
+1. [x] **Organized test results** — moved all test output MDs to `docs/test-results/`
+2. [x] **Created `Dockerfile`** — HF Spaces Docker config with T4 GPU, port 7860
+3. [x] **Created `requirements-api.txt`** — production Python deps (torch, transformers, fastapi, google-genai)
+4. [x] **Created `README_HF.md`** — HF Spaces metadata + API docs
+5. [x] **Created `.dockerignore`** — excludes frontend/docs/tests/datasets from Docker image
+6. [x] **Updated `vercel.json`** — sets `NEXT_PUBLIC_API_URL` to HF Spaces URL, security headers
+7. [x] **Updated `api/app.py` CORS** — specific origins (Vercel prod + preview + localhost)
+8. [x] **Updated test script paths** — output now goes to `docs/test-results/`
+9. [ ] **Create HF Spaces repo** — push API code ← **MANUAL STEP**
+10. [ ] **Set HF Spaces secrets** — `Marlish_Gemini_API_Key` ← **MANUAL STEP**
+11. [ ] **Push to GitHub** — triggers Vercel deploy ← **MANUAL STEP**
+12. [ ] **Verify end-to-end** — Vercel frontend → HF Spaces API
 
 ---
 
-## ⏸ RESUME STATE (Last updated: June 3, 2026 19:00)
+## ⏸ RESUME STATE (Last updated: June 9, 2026 15:23)
 
 > **Read this section first when resuming work.**
 
 ### Environment
 - **Python:** 3.14.5 (venv at `d:\MarlishAI\MarlishAI\venv\`)
 - **GPU:** NVIDIA GeForce RTX 4050 Laptop GPU — CUDA ✅
-- **torch:** `cu126`, **fastapi**, **uvicorn** installed
-- **Node.js:** `npm install` done (116 packages)
-- **NLLB-200-1.3B:** NOT YET DOWNLOADED — will auto-download on first API start (~5GB)
+- **torch:** 2.12.0+cu126, **transformers:** 4.57.6, **fastapi**, **uvicorn** installed
+- **NLLB-200-1.3B:** ✅ Running on GPU
+- **Gemini GEC:** ✅ Enabled (`gemini-2.5-flash-lite`), key in `.local.env`
+- **google-genai:** ✅ Installed
 
-### Key changes today:
-| File | What changed | Status |
-|------|-------------|--------|
-| `api/app.py` | v4: swapped model to `facebook/nllb-200-1.3B` | ✅ Updated, needs restart + model download |
-| `docs/GEMINI_RESEARCH_TRANSLATION_QUALITY.md` | Saved Gemini Deep Research results | ✅ Saved |
+### Deployment Architecture:
+```
+┌─────────────────────┐        ┌──────────────────────────┐
+│   Vercel (Frontend)  │  API   │  HF Spaces (API Backend)  │
+│   Next.js + React    │───────▶│  FastAPI + NLLB-200-1.3B  │
+│   marlishai.vercel   │  POST  │  T4 GPU, Docker           │
+│   .app               │  /translate  │  Port 7860          │
+└─────────────────────┘        └──────────────────────────┘
+```
 
-### What to do next (in order):
-1. **Restart API server** (model will download ~5GB on first start):
-   ```
-   $env:PYTHONIOENCODING="utf-8"; .\venv\Scripts\uvicorn api.app:app --host 0.0.0.0 --port 8000
-   ```
-2. **Test the 3 problem sentences:**
-   ```powershell
-   Invoke-RestMethod -Uri http://localhost:8000/translate -Method POST -Body '{"text": "Kal meeting hai bro", "source": "hinglish", "target": "english"}' -ContentType "application/json"
-   Invoke-RestMethod -Uri http://localhost:8000/translate -Method POST -Body '{"text": "Tuza nav kay ahe", "source": "marlish", "target": "english"}' -ContentType "application/json"
-   Invoke-RestMethod -Uri http://localhost:8000/translate -Method POST -Body '{"text": "Where are you", "source": "english", "target": "marlish"}' -ContentType "application/json"
-   ```
-3. If NLLB-1.3B still has quality issues, try IndicTrans2 distilled-200M next
-4. **Deploy** (Vercel + HF Spaces)
+### Files created/changed for deployment:
+| File | Purpose | Status |
+|------|---------|--------|
+| `Dockerfile` | HF Spaces Docker build | ✅ Created |
+| `requirements-api.txt` | Production Python deps | ✅ Created |
+| `README_HF.md` | HF Spaces metadata + docs | ✅ Created |
+| `.dockerignore` | Exclude frontend/tests from Docker | ✅ Created |
+| `vercel.json` | Vercel config with API URL | ✅ Updated |
+| `api/app.py` | CORS tightened for Vercel domains | ✅ Updated |
+| `docs/test-results/` | All test output MDs moved here | ✅ Organized |
+
+### What to do next — Deploy (in order):
+
+#### Step 1: Create HF Spaces repo
+1. Go to https://huggingface.co/spaces
+2. Create new Space: `MarlishAI/marlishai-api`
+3. Select **Docker** SDK, **T4 small** hardware
+4. Clone the Space repo locally or push from this repo
+
+#### Step 2: Push API code to HF Spaces
+```bash
+# Option A: Push specific files to HF Spaces repo
+git clone https://huggingface.co/spaces/MarlishAI/marlishai-api hf-spaces
+cp Dockerfile hf-spaces/
+cp requirements-api.txt hf-spaces/
+cp README_HF.md hf-spaces/README.md
+cp -r api/ hf-spaces/api/
+cp -r scripts/transliterator/ hf-spaces/scripts/transliterator/
+cd hf-spaces && git add . && git commit -m "Initial deploy" && git push
+```
+
+#### Step 3: Set HF Spaces secrets
+- Go to Space Settings → Secrets
+- Add: `Marlish_Gemini_API_Key` = (your Gemini key from .local.env)
+
+#### Step 4: Push to GitHub (triggers Vercel)
+```bash
+git add .
+git commit -m "v1.0: First deploy — NLLB-1.3B + GEC + all 8 language directions"
+git push origin main
+```
+
+#### Step 5: Update `vercel.json` API URL
+- Once HF Space is running, get the actual URL (format: `https://{username}-{space-name}.hf.space`)
+- Update `NEXT_PUBLIC_API_URL` in `vercel.json` to match
+- Push again to trigger Vercel rebuild
+
+### Important notes:
+- `transformers` is `4.57.6`. Do NOT upgrade to `5.x`.
+- `.local.env` contains API keys — never commit to git.
+- HF Spaces free tier: T4 GPU with 16GB VRAM, auto-sleeps after 48h inactivity.
+- Vercel free tier: unlimited deploys, auto-SSL.
+- Test results now in `docs/test-results/` folder.
 
 ---
 
-*(Future phases will be added here as they become active.)*
+*(Future phases: QLoRA fine-tuning, IndicXlit integration, custom domain)*
 

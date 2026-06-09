@@ -12,6 +12,14 @@ Two-tier approach:
 import re
 
 # ─────────────────────────────────────────────────────────
+# Devanagari digit → ASCII digit mapping
+# ─────────────────────────────────────────────────────────
+DEVA_DIGIT_MAP = {
+    "०": "0", "१": "1", "२": "2", "३": "3", "४": "4",
+    "५": "5", "६": "6", "७": "7", "८": "8", "९": "9",
+}
+
+# ─────────────────────────────────────────────────────────
 # Character-level Devanagari → Latin mapping
 # Maps each Devanagari character/matra to its natural romanized form
 # ─────────────────────────────────────────────────────────
@@ -26,7 +34,7 @@ VOWEL_MAP = {
 
 # Vowel signs (matras — attached to consonants)
 MATRA_MAP = {
-    "ा": "a", "ि": "i", "ी": "ee", "ु": "u", "ू": "oo",
+    "ा": "aa", "ि": "i", "ी": "ee", "ु": "u", "ू": "oo",
     "े": "e", "ै": "ai", "ो": "o", "ौ": "au",
     "ं": "n", "ः": "h", "ँ": "n",
     "ृ": "ru",
@@ -181,6 +189,37 @@ def _devanagari_to_roman_char(text: str) -> str:
     return "".join(result)
 
 
+def _convert_deva_digits(text: str) -> str:
+    """Convert Devanagari digits (०-९) to ASCII digits (0-9)."""
+    for deva, ascii_d in DEVA_DIGIT_MAP.items():
+        text = text.replace(deva, ascii_d)
+    return text
+
+
+def _simplify_romanized(text: str) -> str:
+    """
+    Simplify overly formal/literal romanized output to match
+    natural chat-style spelling conventions.
+
+    Examples:
+        kanyakumaree → kanyakumari
+        darshaneeya  → darshaniya
+        mndira       → mandira
+        sthalh       → sthal
+    """
+    # ee at word boundary → i (kanyakumaree → kanyakumari)
+    text = re.sub(r'ee\b', 'i', text)
+    # oo at word boundary → u (except standalone "oo")
+    text = re.sub(r'(?<=\w)oo\b', 'u', text)
+    # Double 'aa' at end → 'a' (yaatraa → yatra)
+    text = re.sub(r'aa\b', 'a', text)
+    # 'nh' → 'n' when not part of a real cluster
+    text = re.sub(r'\bnh\b', 'n', text)
+    # Clean up stray 'h' after consonant clusters at end: "sthalh" → "sthal"
+    text = re.sub(r'(\w)h\b', lambda m: m.group(1) if m.group(1) in 'lnr' else m.group(0), text)
+    return text
+
+
 def reverse_transliterate(devanagari_text: str, seed_map: dict = None) -> str:
     """
     Convert Devanagari text to natural romanized chat-style text.
@@ -233,7 +272,11 @@ def reverse_transliterate(devanagari_text: str, seed_map: dict = None) -> str:
 
         result_tokens.append(prefix_punct + romanized + suffix_punct)
 
-    return " ".join(result_tokens)
+    # Convert Devanagari digits to ASCII
+    result_text = " ".join(result_tokens)
+    result_text = _convert_deva_digits(result_text)
+    result_text = _simplify_romanized(result_text)
+    return result_text
 
 
 def _is_devanagari(char: str) -> bool:
