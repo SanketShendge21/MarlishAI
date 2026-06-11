@@ -28,6 +28,12 @@ const LABEL_CONFIG = {
     color: 'text-orange-400',
     bg: 'bg-orange-400/10',
   },
+  ml_translation: {
+    text: 'ML Translation',
+    icon: CheckCircle2,
+    color: 'text-violet-500',
+    bg: 'bg-violet-500/10',
+  },
 };
 
 export function OutputArea({ text, isLoading, isDictLoading, error, tier, matchLabel, confidence, targetLanguage }) {
@@ -45,7 +51,7 @@ export function OutputArea({ text, isLoading, isDictLoading, error, tier, matchL
           <div className="flex flex-col gap-3 animate-pulse">
             <div className="h-4 w-3/4 bg-[var(--color-border)] rounded shadow-sm"></div>
             <div className="h-4 w-1/2 bg-[var(--color-border)] rounded shadow-sm"></div>
-            <p className="text-xs text-[var(--color-text-secondary)] mt-2">Loading dictionary...</p>
+            <p className="text-xs text-[var(--color-text-secondary)] mt-2">Loading language engine...</p>
           </div>
         ) : error ? (
           <div className="flex items-start gap-2 text-[var(--color-error)] animate-fade-in bg-red-50 dark:bg-red-900/10 p-3 rounded-lg border border-red-100 dark:border-red-900/20">
@@ -75,7 +81,7 @@ export function OutputArea({ text, isLoading, isDictLoading, error, tier, matchL
           </div>
         ) : (
           <div className="text-[var(--color-text-secondary)]/60 text-lg md:text-xl font-medium mt-4">
-            Translation will appear here...
+            Interpreted output will appear here...
           </div>
         )}
       </div>

@@ -17,15 +17,15 @@ const notoSansDevanagari = Noto_Sans_Devanagari({
 });
 
 export const metadata = {
-  title: 'Marlish.AI — Real-Time Indian Language Translator',
-  description: 'Free, offline-capable translator for Hinglish, Marlish, English, Hindi, and Marathi. Translate as you type. No sign-up required.',
-  keywords: 'Hinglish translator, Marlish translator, Hindi English translator, Marathi translator, Indian language translator, real-time translation, offline translator',
+  title: 'Marlish.AI — Real-Time Indian Chat Language Engine',
+  description: 'Turn messy Hinglish & Marlish into clear, natural language — instantly. Free, offline, no sign-up.',
+  keywords: 'Hinglish chat interpreter, Marlish decoder, Hindi English chat, Marathi chat interpreter, Indian language engine, real-time chat interpretation, offline engine',
   authors: [{ name: 'Marlish.AI' }],
   creator: 'Marlish.AI',
   metadataBase: new URL('https://marlishai.vercel.app'),
   openGraph: {
-    title: 'Marlish.AI — Real-Time Indian Language Translator',
-    description: 'Translate Hinglish, Marlish, English, Hindi, Marathi instantly. Free & offline.',
+    title: 'Marlish.AI — Real-Time Indian Chat Language Engine',
+    description: 'AI that decodes messy Hinglish & Marlish chat into clean language. Free & offline.',
     url: 'https://marlishai.vercel.app',
     siteName: 'Marlish.AI',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -34,8 +34,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Marlish.AI — Real-Time Indian Language Translator',
-    description: 'Translate Hinglish, Marlish, English, Hindi, Marathi instantly. Free & offline.',
+    title: 'Marlish.AI — Real-Time Indian Chat Language Engine',
+    description: 'AI that decodes messy Hinglish & Marlish chat into clean language. Free & offline.',
     images: ['/og-image.png'],
   },
   robots: { index: true, follow: true },
@@ -59,7 +59,7 @@ export default function RootLayout({ children }) {
           "@context": "https://schema.org",
           "@type": "WebApplication",
           "name": "Marlish.AI",
-          "description": "Free real-time Indian language translator",
+          "description": "AI-powered Indian chat language interpreter",
           "applicationCategory": "UtilityApplication",
           "operatingSystem": "Any",
           "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },

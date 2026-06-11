@@ -1,20 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAdaptiveDebounce } from './useDebounce';
-import { routeTranslation } from '@/lib/tier-router';
-import { loadDictionary } from '@/lib/dictionary-engine';
 
 /**
- * useTranslation — Core translation hook (v5)
+ * useTranslation — Core translation hook (v6 — Pure ML API)
+ * 
+ * Calls the Marlish.AI FastAPI backend for translation.
+ * The API handles: Marlish → Devanagari (transliteration) → English (NLLB-200)
  * 
  * Uses adaptive debounce (300ms–800ms based on input length).
- * Returns confidence label: 'exact_match' | 'smart_guess' | 'typo_fixed' | 'partial'
- * 
- * Triggers on EVERY change to:
- *   - inputText (via adaptive debounce)
- *   - source language (instant, no debounce)
- *   - target language (instant, no debounce)
- *   - dictionary readiness
+ * Returns the same shape as v5 so UI components need zero changes.
  */
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export function useTranslation(inputText, source, target) {
   const [translation, setTranslation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,18 +29,26 @@ export function useTranslation(inputText, source, target) {
   // Adaptive debounce: short input = fast, long input = slower
   const debouncedText = useAdaptiveDebounce(inputText);
 
-  // Load dictionary once on mount
+  // Check API health on mount (replaces dictionary loading)
   useEffect(() => {
-    loadDictionary('/dictionary.json')
-      .then(() => setIsDictReady(true))
-      .catch(err => {
-        console.error('[useTranslation] Dict load failed:', err);
-        setError('Dictionary failed to load.');
+    fetch(`${API_BASE}/health`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.ready) {
+          setIsDictReady(true);
+        } else {
+          setError('Translation model is still loading. Please wait...');
+        }
+      })
+      .catch(() => {
+        // API might not be reachable yet — still allow typing
+        // Will retry on first translate call
+        setIsDictReady(true);
       });
   }, []);
 
-  // Core translate function
-  const doTranslate = useCallback(async (text, src, tgt, dictReady) => {
+  // Core translate function — calls the API
+  const doTranslate = useCallback(async (text, src, tgt, ready) => {
     // Clear on empty
     if (!text || text.trim().length < 1) {
       setTranslation('');
@@ -55,12 +61,7 @@ export function useTranslation(inputText, source, target) {
       return;
     }
 
-    if (!dictReady) {
-      setIsLoading(true);
-      return;
-    }
-
-    // Abort previous
+    // Abort previous request
     if (abortRef.current) abortRef.current.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -69,33 +70,39 @@ export function useTranslation(inputText, source, target) {
     setError(null);
 
     try {
-      const result = await routeTranslation(text, src, tgt, {
-        isDictReady: dictReady,
+      const response = await fetch(`${API_BASE}/translate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text.trim(), source: src, target: tgt }),
         signal: controller.signal,
       });
 
       if (controller.signal.aborted) return;
 
-      if (result.tier > 0 && result.result) {
-        setTranslation(result.result);
-        setTier(result.tier);
-        setTierSource(result.source);
-        setMatchLabel(result.label || '');
-        setConfidence(result.confidence || 0);
-        setLatencyMs(result.latencyMs || 0);
-        setError(null);
-      } else {
-        setTranslation('');
-        setTier(0);
-        setTierSource(result.source || '');
-        setMatchLabel('');
-        setConfidence(0);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `API error: ${response.status}`);
       }
+
+      const data = await response.json();
+
+      if (controller.signal.aborted) return;
+
+      setTranslation(data.translation);
+      setTier(3); // API tier
+      setTierSource('api');
+      setMatchLabel('ml_translation');
+      setConfidence(0.9);
+      setLatencyMs(data.latency_ms || 0);
+      setError(null);
     } catch (err) {
-      if (err.name !== 'AbortError' && !controller.signal.aborted) {
-        setError('Translation failed.');
-        setTranslation('');
-      }
+      if (err.name === 'AbortError' || controller.signal.aborted) return;
+      setError('Translation failed. Is the API server running?');
+      setTranslation('');
+      setTier(0);
+      setTierSource('');
+      setMatchLabel('');
+      setConfidence(0);
     } finally {
       if (!controller.signal.aborted) setIsLoading(false);
     }
@@ -113,7 +120,7 @@ export function useTranslation(inputText, source, target) {
     error,
     tier,
     tierSource,
-    matchLabel,   // 'exact_match' | 'smart_guess' | 'typo_fixed' | 'partial'
+    matchLabel,   // 'ml_translation'
     confidence,   // 0.0 – 1.0
     latencyMs,
     isDictReady,

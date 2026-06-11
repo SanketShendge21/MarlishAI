@@ -31,12 +31,12 @@ export function InputArea({ value = '', onValueChange, onClear, sourceLanguage, 
 
   const getPlaceholder = () => {
     switch (sourceLanguage) {
-      case 'hinglish': return 'Type in Hinglish... e.g., kal scene kya hai';
-      case 'marlish':  return 'Type in Marlish... e.g., mi ghari jato';
+      case 'hinglish': return 'Paste Hinglish chat... e.g., kal scene kya hai';
+      case 'marlish':  return 'Paste Marlish chat... e.g., mi ghari jato';
       case 'english':  return 'Type in English... e.g., where are you';
       case 'marathi':  return 'Type in Marathi...';
       case 'hindi':    return 'Type in Hindi...';
-      default:         return 'Type to translate...';
+      default:         return 'Paste your chat...';
     }
   };
 

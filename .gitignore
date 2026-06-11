@@ -39,3 +39,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Large Data & Models
+datasets/*.parquet
+datasets/*.csv
+models/
+legacy/models/
+*.zip
+*.onnx
+
+# Python / ML Environments
+venv/
+.env
+__pycache__/
+*.pyc
+
+# API keys
+.local.env

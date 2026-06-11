@@ -1,0 +1,45 @@
+# .dockerignore — Keep HF Spaces Docker image lean
+# Only ship api/ and scripts/transliterator/ — nothing else
+
+# Frontend (deployed separately on Vercel)
+app/
+hooks/
+lib/
+public/
+.next/
+node_modules/
+package*.json
+postcss.config.mjs
+jsconfig.json
+next.config.mjs
+vercel.json
+
+# Documentation
+docs/
+*.md
+!README_HF.md
+
+# Tests
+tests/
+scripts/test_*.py
+
+# Datasets (not needed at runtime)
+datasets/
+legacy/
+
+# Dev artifacts
+venv/
+.git/
+.gitignore
+.vercel/
+__pycache__/
+*.pyc
+*.workspace
+coverage/
+
+# Large files
+*.parquet
+*.csv
+*.zip
+*.onnx
+models/

@@ -1,7 +1,7 @@
 {
   "name": "Marlish.AI",
   "short_name": "Marlish.AI",
-  "description": "Real-time Indian language translator",
+  "description": "Real-time Indian chat language engine",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",

@@ -13,7 +13,7 @@ export default function NotFound() {
         href="/"
         className="px-6 py-3 rounded-full bg-[var(--color-primary)] text-white font-medium hover:bg-[var(--color-primary-hover)] transition-colors"
       >
-        ← Back to Translator
+        ← Back to Marlish.AI
       </Link>
     </div>
   );
