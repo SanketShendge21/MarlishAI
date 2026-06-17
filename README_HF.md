@@ -5,7 +5,6 @@ colorFrom: indigo
 colorTo: purple
 sdk: docker
 app_port: 7860
-suggested_hardware: t4-small
 pinned: true
 license: mit
 ---
@@ -13,6 +12,8 @@ license: mit
 # MarlishAI Translation API
 
 Real-time translation API for Marathi, Hindi, Marlish (romanized Marathi), Hinglish (romanized Hindi) ↔ English.
+
+Powered by Meta's NLLB-200-1.3B model with a custom transliteration pipeline for romanized Indian languages.
 
 ## API Endpoints
 
@@ -25,18 +26,31 @@ Real-time translation API for Marathi, Hindi, Marlish (romanized Marathi), Hingl
 }
 ```
 
+**Response:**
+```json
+{
+  "translation": "How are you, friend?",
+  "source": "marlish",
+  "target": "english",
+  "latency_ms": 1200
+}
+```
+
 ### `GET /health`
 Returns model status, GEC availability, and device info.
 
 ## Supported Languages
-- `english` — English
-- `marathi` — Marathi (Devanagari)
-- `hindi` — Hindi (Devanagari)
-- `marlish` — Romanized Marathi (chat-style)
-- `hinglish` — Romanized Hindi (chat-style)
+| Code | Language | Script |
+|------|----------|--------|
+| `english` | English | Latin |
+| `marathi` | Marathi | Devanagari |
+| `hindi` | Hindi | Devanagari |
+| `marlish` | Romanized Marathi | Latin (chat-style) |
+| `hinglish` | Romanized Hindi | Latin (chat-style) |
 
-## Tech Stack
-- **Model:** NLLB-200-1.3B (Meta)
-- **Transliteration:** Custom phoneme pipeline + 400+ word seed map
-- **GEC:** Gemini 2.5-flash-lite (optional post-processing for English output)
-- **Runtime:** FastAPI + PyTorch (CUDA)
+## Architecture
+- **Translation Model:** NLLB-200-1.3B (Meta) — 200 language pairs
+- **Transliteration:** Custom 3-tier pipeline (IndicXlit → 400+ word seed map → phoneme rules)
+- **GEC:** Gemini 2.5-flash-lite (optional English post-processing, free tier)
+- **API:** FastAPI + Uvicorn
+- **Runtime:** CPU (free tier) — upgrade to GPU for faster inference

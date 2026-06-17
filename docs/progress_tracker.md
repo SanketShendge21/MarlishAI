@@ -230,98 +230,100 @@ Key findings:
 | English → Hinglish | 9/13 | 10/13 (improved) |
 
 #### Deployment Steps:
-1. [x] **Organized test results** — moved all test output MDs to `docs/test-results/`
-2. [x] **Created `Dockerfile`** — HF Spaces Docker config with T4 GPU, port 7860
-3. [x] **Created `requirements-api.txt`** — production Python deps (torch, transformers, fastapi, google-genai)
+1. [x] **Organized test results** — moved to `docs/test-results/`
+2. [x] **Created `Dockerfile`** — HF Spaces Docker, free tier CPU
+3. [x] **Created `requirements-api.txt`** — CPU-only PyTorch (smaller image)
 4. [x] **Created `README_HF.md`** — HF Spaces metadata + API docs
-5. [x] **Created `.dockerignore`** — excludes frontend/docs/tests/datasets from Docker image
-6. [x] **Updated `vercel.json`** — sets `NEXT_PUBLIC_API_URL` to HF Spaces URL, security headers
-7. [x] **Updated `api/app.py` CORS** — specific origins (Vercel prod + preview + localhost)
-8. [x] **Updated test script paths** — output now goes to `docs/test-results/`
-9. [ ] **Create HF Spaces repo** — push API code ← **MANUAL STEP**
-10. [ ] **Set HF Spaces secrets** — `Marlish_Gemini_API_Key` ← **MANUAL STEP**
-11. [ ] **Push to GitHub** — triggers Vercel deploy ← **MANUAL STEP**
-12. [ ] **Verify end-to-end** — Vercel frontend → HF Spaces API
+5. [x] **Created `.dockerignore`** — excludes frontend/docs/tests
+6. [x] **Updated `vercel.json`** — `NEXT_PUBLIC_API_URL`, security headers
+7. [x] **Updated `api/app.py` CORS** — Vercel prod + preview + localhost
+8. [x] **Updated test script paths** — `docs/test-results/`
+9. [x] **Adjusted all configs for free tier** — CPU-only PyTorch, no GPU hardware spec
+10. [x] **Updated all documentation** — docs 01-11, README.md, README_HF.md
+11. [ ] **Create HF Spaces repo** — push API code ← **MANUAL STEP**
+12. [ ] **Set HF Spaces secrets** — `Marlish_Gemini_API_Key` ← **MANUAL STEP**
+13. [ ] **Push to GitHub** — triggers Vercel deploy ← **MANUAL STEP**
+14. [ ] **Verify end-to-end** — Vercel frontend → HF Spaces API
+
+#### Documentation Update (June 11):
+| Doc | What changed |
+|-----|-------------|
+| `README.md` | Complete rewrite — NLLB arch, current project structure, setup guide |
+| `README_HF.md` | Free tier config, API examples, language table |
+| `01-requirements.md` | v4.0 — functional/non-functional specs for ML pipeline |
+| `02-architecture.md` | v4.0 — NLLB + translit + GEC architecture diagram |
+| `03-ai-ml-models.md` | v4.0 — model selection, rejected models, quality metrics |
+| `04-use-cases.md` | v4.0 — real examples, Carnival Tours test data |
+| `05-deployment.md` | v4.0 — free tier deployment guide (Vercel + HF Spaces) |
+| `06-research-prompts.md` | Header updated — marked as reference archive |
+| `07-project-structure.md` | v4.0 — actual current directory structure |
+| `08-tech-stack.md` | v4.0 — current technology table |
+| `09-app-vision-and-goals.md` | v7.0 — architecture evolution, roadmap |
+| `10-ml-model-roadmap.md` | v4.0 — model timeline, future upgrades |
+| `11-enterprise-architecture.md` | v4.0 — scaling path, tech worth/not-worth |
 
 ---
 
-## ⏸ RESUME STATE (Last updated: June 9, 2026 15:23)
+## ⏸ RESUME STATE (Last updated: June 11, 2026 18:36)
 
 > **Read this section first when resuming work.**
 
 ### Environment
 - **Python:** 3.14.5 (venv at `d:\MarlishAI\MarlishAI\venv\`)
 - **GPU:** NVIDIA GeForce RTX 4050 Laptop GPU — CUDA ✅
-- **torch:** 2.12.0+cu126, **transformers:** 4.57.6, **fastapi**, **uvicorn** installed
-- **NLLB-200-1.3B:** ✅ Running on GPU
-- **Gemini GEC:** ✅ Enabled (`gemini-2.5-flash-lite`), key in `.local.env`
-- **google-genai:** ✅ Installed
+- **torch:** 2.12.0+cu126, **transformers:** 4.57.6
+- **NLLB-200-1.3B:** ✅ Downloaded, tested
+- **Gemini GEC:** ✅ Enabled, key in `.local.env`
 
-### Deployment Architecture:
+### Deployment Architecture (Free Tier):
 ```
-┌─────────────────────┐        ┌──────────────────────────┐
-│   Vercel (Frontend)  │  API   │  HF Spaces (API Backend)  │
-│   Next.js + React    │───────▶│  FastAPI + NLLB-200-1.3B  │
-│   marlishai.vercel   │  POST  │  T4 GPU, Docker           │
-│   .app               │  /translate  │  Port 7860          │
-└─────────────────────┘        └──────────────────────────┘
+┌─────────────────────┐         ┌──────────────────────────┐
+│   Vercel (Frontend)  │  HTTPS  │  HF Spaces (API)         │
+│   Next.js + React    │────────▶│  FastAPI + NLLB-200-1.3B  │
+│   Free tier          │  POST   │  Free tier (CPU)          │
+│                      │  /translate  │  Docker, Port 7860   │
+└─────────────────────┘         └──────────────────────────┘
 ```
-
-### Files created/changed for deployment:
-| File | Purpose | Status |
-|------|---------|--------|
-| `Dockerfile` | HF Spaces Docker build | ✅ Created |
-| `requirements-api.txt` | Production Python deps | ✅ Created |
-| `README_HF.md` | HF Spaces metadata + docs | ✅ Created |
-| `.dockerignore` | Exclude frontend/tests from Docker | ✅ Created |
-| `vercel.json` | Vercel config with API URL | ✅ Updated |
-| `api/app.py` | CORS tightened for Vercel domains | ✅ Updated |
-| `docs/test-results/` | All test output MDs moved here | ✅ Organized |
 
 ### What to do next — Deploy (in order):
 
 #### Step 1: Create HF Spaces repo
 1. Go to https://huggingface.co/spaces
-2. Create new Space: `MarlishAI/marlishai-api`
-3. Select **Docker** SDK, **T4 small** hardware
-4. Clone the Space repo locally or push from this repo
+2. Create new Space (Docker SDK, **CPU basic** — free)
+3. Clone locally
 
 #### Step 2: Push API code to HF Spaces
 ```bash
-# Option A: Push specific files to HF Spaces repo
-git clone https://huggingface.co/spaces/MarlishAI/marlishai-api hf-spaces
-cp Dockerfile hf-spaces/
-cp requirements-api.txt hf-spaces/
-cp README_HF.md hf-spaces/README.md
-cp -r api/ hf-spaces/api/
-cp -r scripts/transliterator/ hf-spaces/scripts/transliterator/
-cd hf-spaces && git add . && git commit -m "Initial deploy" && git push
+git clone https://huggingface.co/spaces/YOUR_USERNAME/marlishai-api hf-deploy
+cp Dockerfile hf-deploy/
+cp requirements-api.txt hf-deploy/
+cp README_HF.md hf-deploy/README.md
+cp -r api/ hf-deploy/api/
+cp -r scripts/transliterator/ hf-deploy/scripts/transliterator/
+cd hf-deploy && git add . && git commit -m "Deploy v1.0" && git push
 ```
 
 #### Step 3: Set HF Spaces secrets
-- Go to Space Settings → Secrets
-- Add: `Marlish_Gemini_API_Key` = (your Gemini key from .local.env)
+- Space Settings → Secrets → `Marlish_Gemini_API_Key`
 
 #### Step 4: Push to GitHub (triggers Vercel)
 ```bash
 git add .
-git commit -m "v1.0: First deploy — NLLB-1.3B + GEC + all 8 language directions"
+git commit -m "v1.0: NLLB-1.3B + GEC + 8 language directions"
 git push origin main
 ```
 
-#### Step 5: Update `vercel.json` API URL
-- Once HF Space is running, get the actual URL (format: `https://{username}-{space-name}.hf.space`)
-- Update `NEXT_PUBLIC_API_URL` in `vercel.json` to match
-- Push again to trigger Vercel rebuild
+#### Step 5: Update vercel.json API URL
+- Get actual HF Space URL → update `NEXT_PUBLIC_API_URL` → push again
 
 ### Important notes:
-- `transformers` is `4.57.6`. Do NOT upgrade to `5.x`.
-- `.local.env` contains API keys — never commit to git.
-- HF Spaces free tier: T4 GPU with 16GB VRAM, auto-sleeps after 48h inactivity.
-- Vercel free tier: unlimited deploys, auto-SSL.
-- Test results now in `docs/test-results/` folder.
+- `transformers` must be `<5.0.0`
+- `.local.env` — never commit
+- Free tier CPU: 15-30s/request (usable for demo, slow for production)
+- Upgrade to T4 GPU later for real-time speed (~₹50/hr)
+- All docs (01-11) updated to v4.0 on June 11
 
 ---
 
-*(Future phases: QLoRA fine-tuning, IndicXlit integration, custom domain)*
+*(Future phases: QLoRA fine-tuning, IndicXlit integration, T4 GPU upgrade, custom domain)*
 

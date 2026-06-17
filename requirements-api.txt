@@ -1,8 +1,8 @@
 # MarlishAI API — Production Dependencies
-# For Hugging Face Spaces deployment (GPU runtime)
+# For Hugging Face Spaces deployment (Free tier — CPU)
 
-# PyTorch (CUDA 12.4 — matches HF Spaces T4 GPU)
---extra-index-url https://download.pytorch.org/whl/cu124
+# PyTorch CPU-only (smaller image, no CUDA needed on free tier)
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch>=2.2.0
 
 # NLP / Translation
@@ -13,7 +13,7 @@ sentencepiece>=0.2.0
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
 
-# Gemini GEC post-processing
+# Gemini GEC post-processing (free tier: 15 RPM, 1M tokens/day)
 google-genai>=1.0.0
 
 # Transliteration deps

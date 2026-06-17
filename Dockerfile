@@ -1,8 +1,11 @@
-# MarlishAI Translation API — Hugging Face Spaces Docker
-# GPU Runtime: T4 (16GB VRAM) — enough for NLLB-200-1.3B
+# MarlishAI Translation API — Hugging Face Spaces Docker (Free Tier / CPU)
+#
+# Runs on HF Spaces free tier (CPU, 16GB RAM).
+# NLLB-200-1.3B runs on CPU — slower (~15-30s/request) but free.
+# Upgrade to T4 GPU ($0.60/hr) for real-time speed (~1-2s/request).
 #
 # Build: docker build -t marlishai-api .
-# Run:   docker run --gpus all -p 7860:7860 marlishai-api
+# Run:   docker run -p 7860:7860 marlishai-api
 
 FROM python:3.11-slim
 
@@ -29,10 +32,10 @@ COPY .local.env* ./
 # HF Spaces expects port 7860
 ENV PORT=7860
 ENV PYTHONIOENCODING=utf-8
-# Set via HF Spaces Secrets:
-# ENV GEMINI_API_KEY=xxx
 
 EXPOSE 7860
+
+USER user
 
 # Start the API
 CMD ["python", "-m", "uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "7860"]
