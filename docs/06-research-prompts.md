@@ -1,6 +1,8 @@
-# Marlish.AI — Detailed Prompts for Language Conversion Research
+# Marlish.AI — Research Prompts (Reference Archive)
 
-> **Version:** 1.0 | **Date:** 2026-04-19 | **Status:** Draft
+> **Version:** 1.0 | **Date:** April 2026 | **Status:** Reference Archive
+>
+> **NOTE (June 2026):** These prompts were used during initial research. The final architecture (NLLB-200-1.3B + transliteration pipeline) was informed by this work. Kept for reference.
 >
 > This document contains carefully crafted prompts you can use with AI assistants
 > (ChatGPT, Gemini, Claude, etc.) to gather deep information about each language
